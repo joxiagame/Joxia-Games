@@ -165,7 +165,7 @@ onAuthStateChanged(auth, (user) => {
 
 function updateGameLinks(name) {
     const snakeLink = document.getElementById("snakeLink");
-    const snakeURL = "https://marvelous-croquembouche-dfa336.netlify.app/";
+    const snakeURL = "https://joxiagame.github.io/Snake-Joxia/";
     if (snakeLink) {
         snakeLink.href = name ? `${snakeURL}?player=${encodeURIComponent(name)}` : snakeURL;
     }
