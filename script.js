@@ -2,14 +2,16 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, deleteUser } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+// --- CONFIGURATION FIREBASE JOXIAHUB ---
 const firebaseConfig = {
-  apiKey: "AIzaSyCPecKQH6DURfYitjY4bXMeW0URLrcNnsI",
-  authDomain: "joxiahub-2928b.firebaseapp.com",
-  projectId: "joxiahub-2928b",
-  storageBucket: "joxiahub-2928b.firebasestorage.app",
-  messagingSenderId: "303698595695",
-  appId: "1:303698595695:web:5c99c2cb2a9ea88e36a29a",
-  databaseURL: "https://joxiahub-2928b-default-rtdb.europe-west1.firebasedatabase.app"
+  apiKey: "AIzaSyBZKJ0WUYEssy-qwVnUv-8B1lLY6v1VoXw",
+  authDomain: "joxiahub.firebaseapp.com",
+  databaseURL: "https://joxiahub-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "joxiahub",
+  storageBucket: "joxiahub.firebasestorage.app",
+  messagingSenderId: "294856376500",
+  appId: "1:294856376500:web:cae8275d4807dc72e497e1",
+  measurementId: "G-VMNMP67SY9"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -115,14 +117,12 @@ document.getElementById("deleteAccountBtn").onclick = async () => {
 const snakeLink = document.getElementById("snakeLink");
 if (snakeLink) {
     snakeLink.onclick = (e) => {
-        e.preventDefault(); // Bloque le comportement par défaut
+        e.preventDefault(); 
         
         if (!auth.currentUser) {
-            // Pas connecté -> On ouvre la modal
             alert("Veuillez vous connecter pour jouer et enregistrer votre score !");
             modal.style.display = "flex";
         } else {
-            // Connecté -> Redirection avec le pseudo
             const name = auth.currentUser.email.split('@')[0];
             const url = "https://joxiagame.github.io/Snake-Joxia/";
             window.location.href = `${url}?player=${encodeURIComponent(name)}`;
@@ -139,46 +139,7 @@ onAuthStateChanged(auth, (user) => {
         loginBtn.innerText = "SE CONNECTER";
     }
 });
+
 /* ==========================================================================
    MODELE D'AJOUT DE NOUVEAU JEU (POUR GARDER LE COMPTE ACTIF)
-   ==========================================================================
-
-   ETAPE 1 : SUR LE HUB (script.js)
-   ---------------------------------
-   Copie-colle ce bloc pour chaque nouveau jeu ajouté dans le HTML :
-
-   const NOM_VARIABLE = document.getElementById("ID_DU_LIEN_HTML");
-   if (NOM_VARIABLE) {
-       NOM_VARIABLE.onclick = (e) => {
-           e.preventDefault(); 
-           if (!auth.currentUser) {
-               alert("Connecte-toi pour jouer !");
-               document.getElementById("authModal").style.display = "flex";
-           } else {
-               // Extrait le pseudo de l'email (ex: test@joxia.fr -> test)
-               const name = auth.currentUser.email.split('@')[0];
-               const url = "URL_DE_TON_NOUVEAU_JEU"; 
-               
-               // TRANSMISSION : On envoie le pseudo dans l'URL du jeu
-               window.location.href = `${url}?player=${encodeURIComponent(name)}`;
-           }
-       };
-   }
-
-   ETAPE 2 : DANS LE CODE DU NOUVEAU JEU (Indispensable !)
-   ------------------------------------------------------
-   Pour que le compte "reste" sur le jeu, demande à Gemini d'ajouter ceci 
-   dans le script de ton NOUVEAU jeu :
-
-   // 1. Récupérer le pseudo envoyé par le Hub
-   const urlParams = new URLSearchParams(window.location.search);
-   const currentPlayer = urlParams.get('player');
-
-   // 2. Vérifier si le joueur est connecté
-   if (!currentPlayer) {
-       alert("Accès refusé. Passe par le Hub Phoenix Assembly !");
-       window.location.href = "https://joxia.netlify.app/"; // Retour au Hub
-   }
-   
-   // 3. Utiliser 'currentPlayer' pour enregistrer les scores dans Firebase
    ========================================================================== */
