@@ -146,6 +146,23 @@ if (FlappyLink) {
         }
     };
 }
+const TetrisLink = document.getElementById("TetrisLink");
+if (TetrisLink) {
+    TetrisLink.onclick = (e) => {
+        e.preventDefault(); // Bloque le comportement par défaut
+        
+        if (!auth.currentUser) {
+            // Pas connecté -> On ouvre la modal
+            alert("Veuillez vous connecter pour jouer et enregistrer votre score !");
+            modal.style.display = "flex";
+        } else {
+            // Connecté -> Redirection avec le pseudo
+            const name = auth.currentUser.email.split('@')[0];
+            const url = "https://joxiagame.github.io/Tetris-Joxia/";
+            window.location.href = `${url}?player=${encodeURIComponent(name)}`;
+        }
+    };
+}
 
 // --- GESTION DE L'ÉTAT ---
 onAuthStateChanged(auth, (user) => {
