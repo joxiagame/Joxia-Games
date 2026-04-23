@@ -163,27 +163,25 @@ if (TetrisLink) {
         }
     };
 }
-const ballBlastLink = document.getElementById("ballBlastLink");
-if (ballBlastLink) {
-    ballBlastLink.onclick = (e) => {
-        e.preventDefault(); // Empêche le rechargement de la page
+const BallBlastLink = document.getElementById("BallBlastLink");
+if (BallBlastLink) {
+    BallBlastLink.onclick = (e) => {
+        e.preventDefault(); // Bloque le comportement par défaut
         
         if (!auth.currentUser) {
-            // Pas connecté -> On ouvre la modal de connexion
-            alert("Veuillez vous connecter pour jouer et enregistrer votre score sur Ball Blast !");
+            // Pas connecté -> On ouvre la modal
+            alert("Veuillez vous connecter pour jouer et enregistrer votre score !");
             modal.style.display = "flex";
         } else {
-            // Connecté -> On récupère le pseudo (ex: aduadu@joxia.fr -> aduadu)
+            // Connecté -> Redirection avec le pseudo
             const name = auth.currentUser.email.split('@')[0];
-            
-            // L'URL de ton jeu sur GitHub
-            const url = "https://joxiagame.github.io/Ball-Blast-Joxia/"; 
-            
-            // Redirection avec le pseudo dans l'URL pour le classement
+            const url = "https://joxiagame.github.io/Ball-Blast-joxia/";
             window.location.href = `${url}?player=${encodeURIComponent(name)}`;
         }
     };
 }
+
+
 // --- GESTION DE L'ÉTAT ---
 onAuthStateChanged(auth, (user) => {
     if (user) {
