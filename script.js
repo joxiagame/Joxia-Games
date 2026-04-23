@@ -178,7 +178,7 @@ if (ballBlastLink) {
             const name = auth.currentUser.email.split('@')[0];
             
             // URL de ton jeu sur GitHub (Vérifie bien que le nom du dépôt est correct)
-            const url = "https://joxiagame.github.io/Ball-Blast-Joxia/"; 
+            const url = "https://joxiagame.github.io/Ball-Blast-joxia/"; 
             
             // Redirection avec le pseudo dans l'URL
             window.location.href = `${url}?player=${encodeURIComponent(name)}`;
