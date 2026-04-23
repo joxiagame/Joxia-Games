@@ -163,6 +163,28 @@ if (TetrisLink) {
         }
     };
 }
+// --- LOGIQUE DE CLIC SUR BALL BLAST ---
+const ballBlastLink = document.getElementById("ballBlastLink");
+if (ballBlastLink) {
+    ballBlastLink.onclick = (e) => {
+        e.preventDefault(); // Bloque le comportement par défaut du lien
+        
+        if (!auth.currentUser) {
+            // Pas connecté -> On ouvre la modal de connexion
+            alert("Veuillez vous connecter pour jouer et enregistrer votre score sur Ball Blast !");
+            modal.style.display = "flex";
+        } else {
+            // Connecté -> On extrait le pseudo de l'email (ex: aduadu@joxia.fr -> aduadu)
+            const name = auth.currentUser.email.split('@')[0];
+            
+            // URL de ton jeu sur GitHub (Vérifie bien que le nom du dépôt est correct)
+            const url = "https://joxiagame.github.io/Ball-Blast-Joxia/"; 
+            
+            // Redirection avec le pseudo dans l'URL
+            window.location.href = `${url}?player=${encodeURIComponent(name)}`;
+        }
+    };
+}
 
 // --- GESTION DE L'ÉTAT ---
 onAuthStateChanged(auth, (user) => {
