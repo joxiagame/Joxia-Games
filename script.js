@@ -181,6 +181,21 @@ if (BallBlastLink) {
     };
 }
 
+const BrickBlastLink = document.getElementById("BrickBlastLink");
+if (BrickBlastLink) {
+    BrickBlastLink.onclick = (e) => {
+        e.preventDefault();
+        if (!auth.currentUser) {
+            alert("Veuillez vous connecter pour jouer et enregistrer votre score !");
+            modal.style.display = "flex";
+        } else {
+            const name = auth.currentUser.email.split('@')[0];
+            const url = "https://joxiagame.github.io/Breakout-Joxia/";
+            window.location.href = `${url}?player=${encodeURIComponent(name)}`;
+        }
+    };
+}
+
 
 // --- GESTION DE L'ÉTAT ---
 onAuthStateChanged(auth, (user) => {
