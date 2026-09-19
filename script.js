@@ -71,7 +71,8 @@ if (fsBtn) {
         const isFs = () => document.fullscreenElement || document.webkitFullscreenElement;
         fsBtn.onclick = () => {
             if (!isFs()) {
-                (docEl.requestFullscreen || docEl.webkitRequestFullscreen).call(docEl);
+                const p = (docEl.requestFullscreen || docEl.webkitRequestFullscreen).call(docEl);
+                if (p && p.catch) p.catch(() => {});
             } else {
                 (document.exitFullscreen || document.webkitExitFullscreen).call(document);
             }
