@@ -2,16 +2,19 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>JOXIA | Gaming Hub</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
 
     <nav class="navbar">
         <div class="logo">JOXIA</div>
         <div class="search-container">
-            <input type="text" id="searchInput" placeholder="Rechercher un jeu..." onkeyup="searchGame()">
+            <input type="text" id="searchInput" placeholder="🔍 Rechercher un jeu..." onkeyup="searchGame()">
         </div>
         <div class="nav-right">
             <a href="https://discord.gg/BNY6xprSen" target="_blank" class="discord-btn">
@@ -29,65 +32,83 @@
         </div>
     </nav>
 
+    <header class="hero">
+        <span class="hero-badge">☀️ SUNNY ARCADE</span>
+        <h1>Joue, grimpe au <span class="accent">classement</span>,<br>défie tes amis.</h1>
+        <p>Une collection de mini-jeux arcade maison. Connecte-toi pour enregistrer tes scores et viser le top&nbsp;10.</p>
+        <div class="hero-stats">
+            <div class="hstat"><b>5</b><span>Jeux</span></div>
+            <div class="hstat"><b>1</b><span>Classement</span></div>
+            <div class="hstat"><b>∞</b><span>Fun</span></div>
+        </div>
+    </header>
+
     <main class="container">
         <h2 class="section-title">Catalogue des Jeux</h2>
         <div class="game-grid">
             <a href="#" class="game-card" id="snakeLink">
                 <div class="game-thumb">
                     <img src="Snake.png" alt="Snake" class="game-img">
-                    <div class="play-overlay">JOUER</div>
+                    <div class="play-overlay">▶ JOUER</div>
                 </div>
                 <div class="game-info">
                     <h3>Snake Joxia</h3>
-                    <p>Arcade • Classique</p>
+                    <p>Arcade • Serpent rétro</p>
                 </div>
             </a>
              <a href="#" class="game-card" id="FlappyLink">
+                <span class="card-badge">MAJ</span>
                 <div class="game-thumb">
                     <img src="Flappy Bird.png" alt="Flappy Bird" class="game-img">
-                    <div class="play-overlay">JOUER</div>
+                    <div class="play-overlay">▶ JOUER</div>
                 </div>
                 <div class="game-info">
-                    <h3>Flappy Bird Joxia</h3>
-                    <p>Arcade • Classique</p>
+                    <h3>Flappy Joxia</h3>
+                    <p>Arcade • Vol & réflexes</p>
                 </div>
             </a>
             <a href="#" class="game-card" id="TetrisLink">
                 <div class="game-thumb">
                     <img src="Tetris.png" alt="Tetris" class="game-img">
-                    <div class="play-overlay">JOUER</div>
+                    <div class="play-overlay">▶ JOUER</div>
                 </div>
                 <div class="game-info">
                     <h3>Tetris Joxia</h3>
-                    <p>Arcade • Classique</p>
+                    <p>Puzzle • Briques</p>
                 </div>
             </a>
             <a href="#" class="game-card" id="BallBlastLink">
                 <div class="game-thumb">
                     <img src="Ball Blast.png" alt="Ball Blast" class="game-img">
-                    <div class="play-overlay">JOUER</div>
+                    <div class="play-overlay">▶ JOUER</div>
                 </div>
                 <div class="game-info">
                     <h3>Ball Blast Joxia</h3>
-                    <p>Arcade • Classique</p>
+                    <p>Action • Tir & boss</p>
                 </div>
             </a>
             <a href="#" class="game-card" id="BrickBlastLink">
-                <div class="game-thumb" style="background:linear-gradient(160deg,#f4511e 0%,#ff9a4d 55%,#ffd54a 100%);display:flex;align-items:center;justify-content:center;">
-                    <span style="font-size:2.6rem;filter:drop-shadow(0 3px 4px rgba(0,0,0,.35));">🧱</span>
-                    <div class="play-overlay">JOUER</div>
+                <span class="card-badge">NOUVEAU</span>
+                <div class="game-thumb" style="background:linear-gradient(160deg,#f4511e 0%,#ff9a4d 55%,#ffd54a 100%);">
+                    <span style="font-size:3rem;filter:drop-shadow(0 3px 4px rgba(0,0,0,.35));">🧱</span>
+                    <div class="play-overlay">▶ JOUER</div>
                 </div>
                 <div class="game-info">
                     <h3>Brick Blast Joxia</h3>
                     <p>Arcade • Casse-briques</p>
                 </div>
             </a>
-            <div class="game-card">
-                <div class="game-thumb"><span style="font-size: 3rem; color: #252535;">+</span></div>
+            <div class="game-card coming">
+                <span class="card-badge soon">BIENTÔT</span>
+                <div class="game-thumb"><span>+</span></div>
                 <div class="game-info"><h3>Prochainement</h3><p>En développement</p></div>
             </div>
         </div>
     </main>
+
+    <footer class="footer">
+        © 2026 <b>JOXIA Games</b> — fait avec ☀️ &nbsp;•&nbsp; <a href="https://discord.gg/BNY6xprSen" target="_blank">Rejoindre le Discord</a>
+    </footer>
 
     <div id="authModal" class="modal">
         <div class="modal-content">
@@ -95,9 +116,9 @@
             <h3 id="authTitle">Connexion</h3>
             <input type="text" id="usernameInput" placeholder="Pseudo">
             <input type="password" id="passwordInput" placeholder="Mot de passe">
-            <button id="confirmBtn" class="login-btn" style="width: 100%; margin-top: 10px;">VALIDER</button>
+            <button id="confirmBtn" class="login-btn" style="width: 100%; margin-top: 6px;">VALIDER</button>
             <p class="auth-switch">
-                <span id="switchText">Pas de compte ?</span> 
+                <span id="switchText">Pas de compte ?</span>
                 <a href="#" id="toggleAuthMode">S'inscrire</a>
             </p>
         </div>
@@ -106,8 +127,8 @@
     <div id="leaderboardModal" class="modal">
         <div class="modal-content" style="max-width: 500px;">
             <span class="close-btn" id="closeRank">&times;</span>
-            <h3 style="color: var(--neon); margin-bottom: 20px;">🏆 TOP JOXIA</h3>
-            <div id="leaderboardContent" style="max-height: 400px; overflow-y: auto; color: white;">
+            <h3 style="font-family:'Fredoka';color: var(--orange-d); margin-bottom: 20px;">🏆 TOP JOXIA</h3>
+            <div id="leaderboardContent" style="max-height: 400px; overflow-y: auto;">
                 <p>Chargement des scores...</p>
             </div>
         </div>
@@ -116,4 +137,3 @@
     <script type="module" src="script.js"></script>
 </body>
 </html>
-
