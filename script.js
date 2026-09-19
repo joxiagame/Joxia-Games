@@ -219,6 +219,21 @@ if (BrickBlastLink) {
     };
 }
 
+const Game2048Link = document.getElementById("Game2048Link");
+if (Game2048Link) {
+    Game2048Link.onclick = (e) => {
+        e.preventDefault();
+        if (!auth.currentUser) {
+            alert("Veuillez vous connecter pour jouer et enregistrer votre score !");
+            modal.style.display = "flex";
+        } else {
+            const name = auth.currentUser.email.split('@')[0];
+            const url = "https://joxiagame.github.io/2048-joxia/";
+            window.location.href = `${url}?player=${encodeURIComponent(name)}`;
+        }
+    };
+}
+
 
 // --- GESTION DE L'ÉTAT ---
 onAuthStateChanged(auth, (user) => {
