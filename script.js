@@ -234,6 +234,21 @@ if (Game2048Link) {
     };
 }
 
+const PacmanLink = document.getElementById("PacmanLink");
+if (PacmanLink) {
+    PacmanLink.onclick = (e) => {
+        e.preventDefault();
+        if (!auth.currentUser) {
+            alert("Veuillez vous connecter pour jouer et enregistrer votre score !");
+            modal.style.display = "flex";
+        } else {
+            const name = auth.currentUser.email.split('@')[0];
+            const url = "https://joxiagame.github.io/Pacman-Joxia/";
+            window.location.href = `${url}?player=${encodeURIComponent(name)}`;
+        }
+    };
+}
+
 
 // --- GESTION DE L'ÉTAT ---
 onAuthStateChanged(auth, (user) => {
