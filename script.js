@@ -60,6 +60,28 @@ if (rankBtn) {
 }
 document.getElementById("closeRank").onclick = () => rankModal.style.display = "none";
 
+// --- PLEIN ÉCRAN ---
+const fsBtn = document.getElementById("fsBtn");
+if (fsBtn) {
+    const docEl = document.documentElement;
+    const canFs = !!(docEl.requestFullscreen || docEl.webkitRequestFullscreen);
+    if (!canFs) {
+        fsBtn.style.display = "none"; // ex : iPhone Safari ne le supporte pas
+    } else {
+        const isFs = () => document.fullscreenElement || document.webkitFullscreenElement;
+        fsBtn.onclick = () => {
+            if (!isFs()) {
+                (docEl.requestFullscreen || docEl.webkitRequestFullscreen).call(docEl);
+            } else {
+                (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+            }
+        };
+        const sync = () => { fsBtn.textContent = isFs() ? "🗕" : "⛶"; fsBtn.title = isFs() ? "Quitter le plein écran" : "Plein écran"; };
+        document.addEventListener("fullscreenchange", sync);
+        document.addEventListener("webkitfullscreenchange", sync);
+    }
+}
+
 // --- AUTHENTIFICATION ---
 const modal = document.getElementById("authModal");
 const loginBtn = document.querySelector(".login-btn");

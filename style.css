@@ -53,6 +53,7 @@ button{padding:10px 18px;border-radius:12px;font-weight:800;cursor:pointer;borde
 button:active{transform:scale(.96);}
 .rank-btn{background:#fff;color:var(--ink);border:1.5px solid var(--line);box-shadow:var(--shadow-sm);}
 .rank-btn:hover{border-color:var(--gold);color:var(--orange-d);}
+.fs-btn{padding:10px 13px;font-size:1.1rem;line-height:1;}
 .login-btn{background:linear-gradient(180deg,var(--amber),var(--orange));color:#fff;box-shadow:0 5px 0 var(--orange-d);}
 .login-btn:hover{filter:brightness(1.05);}
 .login-btn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--orange-d);}
