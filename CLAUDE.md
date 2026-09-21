@@ -65,3 +65,30 @@ Serveurs configurés en local (portée machine, `claude mcp list`) :
 ### UI/UX
 - Thèmes/templates CSS open-source : chercher sur GitHub (ex. `animate.css`, `nes.css`, `98.css`).
 - Visualiser/tester les interfaces avec le serveur MCP `playwright` (captures, responsive, a11y).
+
+## Intégration de jeux open-source (dossier `games/`)
+
+Le hub héberge des jeux tiers open-source **statiques** (en plus des mini-jeux maison du « Catalogue »).
+
+### Structure
+- `games/<jeu>/` — un jeu complet auto-suffisant (HTML/CSS/JS/ressources), servi tel quel par GitHub Pages.
+  - Ex. `games/shapez/` (Shapez.io, GPL-3.0) : `index.html` + `bundle.js` + `main.css` + `res/`.
+- Jeux tiers = sauvegarde **locale** (localStorage) → **pas de gate Firebase** dans `script.js` ; lien direct `<a href="games/<jeu>/index.html">`.
+- Référencés dans la section « 🏆 Classement des Meilleurs Jeux 2D » (`index.html`, `.featured-card`), **pas** dans le « Catalogue des Jeux » (mini-jeux maison, authentifiés).
+
+### Méthodologie d'ajout d'un nouveau jeu
+1. **Cloner** le dépôt officiel **hors du repo** (ex. `C:\Users\basil\shapez-build\`) pour ne pas polluer `games/` avec `node_modules`/sources.
+2. **Builder** la version web statique (si npm requis) et récupérer **uniquement** le dossier `build/` final.
+3. **Copier** le build dans `games/<jeu>/` — vérifier que les chemins (JS/CSS/assets) sont **relatifs** (`main.css`, `bundle.js`, `res/…`), jamais absolus (`/…`).
+4. **Ajouter une carte** dans `index.html` (section classement) : titre, description des mécaniques, badge, bouton « Jouer maintenant », miniature (`<jeu>.png`).
+5. **Tester localement** : `python -m http.server 8000` + playwright (ouvrir hub + jeu, capture d'écran, zéro erreur console).
+6. **Documenter** ici (structure + spécificités du build).
+
+### Build Shapez.io (spécifique)
+- Repo : `tobspr-games/shapez.io` (GPL-3.0). ⚠️ La « Community Edition » ne supporte **plus** le build web.
+- Toolchain : Node (webpack 4 → `NODE_OPTIONS=--openssl-legacy-provider` sur Node 17+), Yarn 1.22, **Java 17** (atlas de textures), **ffmpeg** (audio).
+- Build : `cd gulp && yarn gulp build.web-shapezio` → sortie dans `build/` (copiée vers `games/shapez/`).
+- **3 corrections requises** (déjà appliquées dans `C:\Users\basil\shapez-build\` ; à refaire si on reclone) :
+  1. `gulp/node_modules/fluent-ffmpeg/lib/capabilities.js` : `formatRegexp` → `/^\s*([D ])([E ])\s+(\S+)\s+(.*)$/` (ffmpeg récent aligne le nom de format à droite).
+  2. Copier `src/js/core/config.local.template.js` → `src/js/core/config.local.js` (la tâche `localConfig.findOrCreate` n'est pas incluse dans le build de prod).
+  3. `src/js/core/cachebust.js` et `gulp/buildutils.js` : retourner le chemin **relatif** (pas `/v/<hash>/`) pour un hébergement statique en sous-dossier GitHub Pages.

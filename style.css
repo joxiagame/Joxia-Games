@@ -117,6 +117,42 @@ button:active{transform:scale(.96);}
 .game-card.coming .game-thumb{background:repeating-linear-gradient(45deg,#ffe9d2,#ffe9d2 12px,#ffe1c4 12px,#ffe1c4 24px);}
 .game-card.coming .game-thumb span{font-size:3rem;color:#d9b493;}
 
+/* ---------- Classement des meilleurs jeux 2D ---------- */
+.ranking-section{max-width:1200px;margin:6px auto 0;padding:6px 5% 0;}
+.featured-card{
+    position:relative;display:flex;gap:26px;align-items:center;
+    background:var(--card);border:1px solid var(--line);border-top:4px solid var(--gold);
+    border-radius:24px;padding:28px;box-shadow:var(--shadow);overflow:hidden;
+}
+.featured-card::after{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(440px 220px at 0% 0%, rgba(246,168,33,.14), transparent 60%);
+}
+.featured-badge{
+    position:absolute;top:14px;left:14px;z-index:2;
+    background:linear-gradient(120deg,var(--gold),var(--orange));color:#fff;
+    font-size:.72rem;font-weight:900;letter-spacing:.5px;
+    padding:6px 14px;border-radius:50px;box-shadow:var(--shadow-sm);
+}
+.featured-thumb{flex:0 0 320px;height:200px;border-radius:16px;overflow:hidden;background:linear-gradient(160deg,#3a2a4a,#5a3a6a);}
+.featured-img{width:100%;height:100%;object-fit:cover;display:block;}
+.featured-body{flex:1;min-width:0;}
+.featured-body h3{font-family:'Fredoka',sans-serif;font-weight:700;font-size:1.8rem;margin-bottom:6px;}
+.featured-desc{color:var(--ink-soft);font-weight:600;font-size:.95rem;margin-bottom:14px;line-height:1.5;}
+.featured-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;}
+.featured-tags span{
+    background:var(--cream-2);border:1px solid var(--line);color:var(--ink);
+    font-size:.75rem;font-weight:800;padding:5px 12px;border-radius:50px;
+}
+.play-btn{
+    display:inline-block;text-decoration:none;color:#fff;font-weight:900;letter-spacing:.5px;
+    font-size:1rem;padding:13px 26px;border-radius:14px;
+    background:linear-gradient(180deg,var(--amber),var(--orange));box-shadow:0 5px 0 var(--orange-d);
+    transition:.2s;
+}
+.play-btn:hover{filter:brightness(1.06);transform:translateY(-2px);}
+.play-btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--orange-d);}
+
 /* ---------- Modales ---------- */
 .modal{display:none;position:fixed;inset:0;background:rgba(67,41,26,.5);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;padding:16px;}
 .modal-content{background:var(--card);padding:30px 28px;border-radius:22px;border:1px solid var(--line);width:100%;max-width:400px;text-align:center;position:relative;box-shadow:var(--shadow);}
