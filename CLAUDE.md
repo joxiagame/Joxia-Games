@@ -100,3 +100,22 @@ Le hub héberge des jeux tiers open-source **statiques** (en plus des mini-jeux 
 - Structure copiée vers `games/mindustry/` : `index.html` (launcher + export/import sauvegardes localStorage), `game.html` (app GWT), `html/` (`.nocache.js` + `.cache.js` compilé ~3,4 Mo), `assets/` (sprites/sons/musiques/cartes), `styles.css`, `title.png`, `soundmanager2-*`.
 - **1 correction requise** : `index.html` → chemins **relatifs** `src="title.png"` et `href="game.html"` (au lieu de `/title.png`, `/game.html`).
 - Sauvegarde **locale** (localStorage) → lien direct `<a href="games/mindustry/index.html">`, pas de gate Firebase.
+
+### Build Survivor (spécifique)
+- Repo source : `canvas-vampire-survivors` (MIT). Roguelite « Vampire Survivors-like », 100 % HTML5 Canvas, **zéro dépendance**, modules ES (`<script type="module">`).
+- Structure copiée vers `games/survivor/` : `index.html`, `styles.css`, `src/` (23 fichiers JS), `hero.svg`, `LICENSE`.
+- Corrections appliquées à `index.html` : suppression du `<link rel="manifest">` (PWA) + du script d'enregistrement du service worker, et chemins `./docs/hero.svg` / `./docs/og-card.svg` → `./hero.svg` (les `docs/` ne sont pas copiées).
+- ⚠️ i18n **anglais + chinois uniquement** (pas de français). Premier lancement : 2 overlays à fermer (`#howtoClose` puis `#tutorialOfferNo`).
+- Sauvegarde locale (localStorage) → lien direct, pas de gate Firebase.
+
+### Build Sandspiel (spécifique)
+- Repo source : `maxbittker/sandspiel` (MIT, « sandtable »). Jeu de sable qui tombe (Rust → WASM via wasm-pack + webpack 5).
+- Build récupéré **pré-compilé** depuis la branche `gh-pages` (sortie webpack) → **aucune compilation Rust/wasm-pack requise**.
+- Structure copiée vers `games/sandspiel/` : `index.html`, `main.<hash>.js` (runtime webpack), `728.<hash>.js` (glue wasm-bindgen, ~1 Mo), `86.<hash>.js` (UI), `<hash>.module.wasm`, `styles.css`, `assets/` (polices + icônes).
+- **3 corrections requises** :
+  1. `main.<hash>.js` : `l.p="/"` → `l.p=""` (publicPath webpack — pilote le chargement des chunks **et** le fetch du `.wasm` ; sans ça, tout casse en sous-dossier).
+  2. `index.html` : chemins absolus → relatifs, suppression des scripts pubs/tracking (AdSense, Google Tag Manager, `a.sandspiel.club/app.js` + `/image.gif`) et du smart banner App Store.
+  3. `86.<hash>.js` : retirer `(adsbygoogle=window.adsbygoogle||[]).push({})` (sinon `ReferenceError: adsbygoogle is not defined` au boot, le module étant en mode strict).
+- Fichiers supprimés (poids mort) : `*.map`, `service-worker.js`, `workbox-*.js`, `manifest.json`, `assets/ads.txt`.
+- Volet promo « PullTab » (Discord + App Store payant de l'auteur) masqué via `#PullTab{display:none}` dans `index.html`.
+- ⚠️ Bouton « Upload » (partage) contacte le serveur de l'auteur (`a.sandspiel.club`) → échoue silencieusement hors-ligne. i18n **anglais uniquement**.
