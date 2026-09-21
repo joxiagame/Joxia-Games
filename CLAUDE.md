@@ -73,7 +73,7 @@ Chaque jeu tiers open-source **statique** vit dans **son propre repo** `joxiagam
 ### Structure
 - `joxiagame/<jeu>-joxia` — un jeu complet auto-suffisant (HTML/CSS/JS/ressources), servi à la racine par GitHub Pages (`https://joxiagame.github.io/<jeu>-joxia/`).
   - Ex. `Shapez-joxia` (Shapez.io, GPL-3.0) : `index.html` + `bundle.js` + `main.css` + `res/`.
-  - Ex. `Mindindustry-joxia` (Mindustry Classic, GPL-3.0) : `index.html` (launcher) + `game.html` (app GWT) + `html/` + `assets/`.
+  - Ex. `Mindustry-joxia` (Mindustry Classic, GPL-3.0) : `index.html` (launcher) + `game.html` (app GWT) + `html/` + `assets/`.
   - Ex. `survivor-joxia` (roguelite, MIT) et `sandspiel-joxia` (sable qui tombe, MIT).
 - La miniature (`<jeu>.png`) reste dans le repo du **hub** (`Joxia-Games`), référencée par la carte du classement.
 - Jeux tiers = sauvegarde **locale** (localStorage) → **pas de gate Firebase** dans `script.js` ; lien direct `<a href="https://joxiagame.github.io/<jeu>-joxia/">`.
@@ -100,9 +100,9 @@ Chaque jeu tiers open-source **statique** vit dans **son propre repo** `joxiagam
 ### Build Mindustry (spécifique)
 - Repo source : `Anuken/Mindustry-Classic` (GPL-3.0). ⚠️ Le build HTML5 (GWT) n'existe **que** sur la version Classic (build 40) ; les versions récentes l'ont abandonné.
 - Build web récupéré **pré-compilé** depuis `minidogg/MindustryClassicMirror` (miroir du build HTML5 itch.io, dossier `web/`) → **aucune compilation GWT requise** (Java 8 + GWT serait trop lourd/fragile).
-- Structure poussée vers `joxiagame/Mindindustry-joxia` : `index.html` (launcher + export/import sauvegardes localStorage), `game.html` (app GWT), `html/` (`.nocache.js` + `.cache.js` compilé ~3,4 Mo), `assets/` (sprites/sons/musiques/cartes), `styles.css`, `title.png`, `soundmanager2-*`.
+- Structure poussée vers `joxiagame/Mindustry-joxia` : `index.html` (launcher + export/import sauvegardes localStorage), `game.html` (app GWT), `html/` (`.nocache.js` + `.cache.js` compilé ~3,4 Mo), `assets/` (sprites/sons/musiques/cartes), `styles.css`, `title.png`, `soundmanager2-*`.
 - **1 correction requise** : `index.html` → chemins **relatifs** `src="title.png"` et `href="game.html"` (au lieu de `/title.png`, `/game.html`).
-- Sauvegarde **locale** (localStorage) → lien direct `<a href="https://joxiagame.github.io/Mindindustry-joxia/">`, pas de gate Firebase.
+- Sauvegarde **locale** (localStorage) → lien direct `<a href="https://joxiagame.github.io/Mindustry-joxia/">`, pas de gate Firebase.
 
 ### Build Survivor (spécifique)
 - Repo source : `canvas-vampire-survivors` (MIT). Roguelite « Vampire Survivors-like », 100 % HTML5 Canvas, **zéro dépendance**, modules ES (`<script type="module">`).
