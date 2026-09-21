@@ -15,9 +15,11 @@
 - **Jeux vidéo** : optimiser la boucle de rendu (game loop), gérer la mémoire proprement, architecture modulaire (ECS / orientée composants).
 - Commenter les parties complexes (logique de jeu, interface).
 
-## Skill 3 — Générateur & Intégrateur 3D (100 % gratuit)
-- Modèle 3D **simple** → générer un script qui construit le modèle mathématiquement (Python/Blender, OpenSCAD, Three.js/Babylon.js).
-- Modèle **complexe** → écrire un script bash/Python utilisant l'API publique de sites open-source pour chercher et télécharger automatiquement des `.obj` / `.gltf` sous licence libre (CC0).
+## Skill 3 — Pipeline d'Assets 3D & 2D (100 % gratuit / CC0)
+- **Règle** : au lieu de coder de la 3D basique par scripts mathématiques, **chercher et télécharger des assets CC0 professionnels**, ou **générer de la 2D via IA**.
+- **3D** : `scripts/asset_fetcher.py` (Poly Haven CC0 sans token, Sketchfab avec token) + `gltf-pipeline` pour optimiser/compresser les `.gltf`/`.glb`.
+- **2D** : `scripts/generate_image.py` (Hugging Face Inference API, ou ComfyUI local sur RTX 5070).
+- **UI** : récupérer des thèmes/templates CSS depuis GitHub, visualiser avec le serveur MCP `playwright`.
 
 ## Skill 4 — Scraper GitHub
 - Utiliser `git clone` ou l'interface CLI `gh` pour chercher, télécharger et intégrer des bibliothèques, shaders ou assets 100 % gratuits et open-source.
@@ -30,9 +32,36 @@ Serveurs configurés en local (portée machine, `claude mcp list`) :
 - **github** — `npx -y @modelcontextprotocol/server-github` : recherche de dépôts, lecture de code/assets, intégration de projets open-source sans navigateur.
 - **memory** — `npx -y @modelcontextprotocol/server-memory` : graphe de connaissances persistant (projet, règles UI/UX, préférences) sans reconsommer l'historique en tokens.
 - **fetch** — `uvx mcp-server-fetch` : lecture de doc en ligne, recherche de modèles 3D CC0, récupération de shaders/assets web (HTML → markdown).
+- **playwright** — `npx -y @playwright/mcp@latest` : automatisation navigateur (test UI/UX du hub, captures d'écran, responsive/accessibilité, débogage des jeux web).
+- **sequential-thinking** — `npx -y @modelcontextprotocol/server-sequential-thinking` : raisonnement structuré par étapes pour la logique de jeu et l'architecture.
 
 ## Skills spécifiques actives
 
 - **Game UI/UX** : architecture modulaire, responsive design, bonnes pratiques jeu vidéo.
 - **3D Asset Pipeline** : récupérer des fichiers 3D (OBJ/GLTF) sur GitHub/sites CC0, ou générer du code 3D (Three.js/OpenSCAD).
 - **Token Optimizer** : utiliser en priorité les serveurs MCP pour réduire les requêtes redondantes.
+
+## Pipeline d'Assets — Outils & Méthodologie
+
+### 3D (sources CC0)
+- **Poly Haven** (`api.polyhaven.com`, CC0, sans token) : modèles, textures, HDRI.
+  `python scripts/asset_fetcher.py search polyhaven <models|textures|hdris> <mot-clé>`
+  `python scripts/asset_fetcher.py download polyhaven <asset_id> ./assets`
+- **Sketchfab** (token requis `SKETCHFAB_TOKEN`) : recherche de modèles variés (armes, persos…).
+  `python scripts/asset_fetcher.py search sketchfab "fantasy sword"`
+- **Kenney.nl** (CC0, assets de jeu low-poly + sprites) : téléchargement manuel depuis le site.
+- **Optimisation** : `gltf-pipeline -i in.gltf -o out.glb -d` (compression Draco).
+
+### 2D (génération IA)
+- **Local — ComfyUI** (RTX 5070 12 Go, illimité, hors ligne) — **installé** :
+  - Emplacement : `C:\Users\basil\ComfyUI_windows_portable` (PyTorch 2.13 cu130 → Blackwell OK)
+  - Lancer le serveur : `run_nvidia_gpu.bat` (interface web : http://127.0.0.1:8188)
+  - Modèle : `ComfyUI\models\checkpoints\sd_xl_base_1.0.safetensors` (SDXL base, ~6,9 Go)
+  - CLI : `python scripts/generate_image.py "une épée fantasy pixel art" --comfyui --out epee.png`
+  - Options : `--size 1024x1024 --steps 20 --cfg 7 --seed 42`
+- **Hébergé** (secours, sans GPU) : `HF_TOKEN` requis.
+  `python scripts/generate_image.py "une épée fantasy pixel art" --out epee.png`
+
+### UI/UX
+- Thèmes/templates CSS open-source : chercher sur GitHub (ex. `animate.css`, `nes.css`, `98.css`).
+- Visualiser/tester les interfaces avec le serveur MCP `playwright` (captures, responsive, a11y).
