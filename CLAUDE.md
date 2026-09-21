@@ -66,29 +66,32 @@ Serveurs configurés en local (portée machine, `claude mcp list`) :
 - Thèmes/templates CSS open-source : chercher sur GitHub (ex. `animate.css`, `nes.css`, `98.css`).
 - Visualiser/tester les interfaces avec le serveur MCP `playwright` (captures, responsive, a11y).
 
-## Intégration de jeux open-source (dossier `games/`)
+## Intégration de jeux open-source (1 repo par jeu)
 
-Le hub héberge des jeux tiers open-source **statiques** (en plus des mini-jeux maison du « Catalogue »).
+Chaque jeu tiers open-source **statique** vit dans **son propre repo** `joxiagame/<jeu>-joxia` (comme les mini-jeux maison), déployé via GitHub Pages, et le hub pointe vers l'URL externe.
 
 ### Structure
-- `games/<jeu>/` — un jeu complet auto-suffisant (HTML/CSS/JS/ressources), servi tel quel par GitHub Pages.
-  - Ex. `games/shapez/` (Shapez.io, GPL-3.0) : `index.html` + `bundle.js` + `main.css` + `res/`.
-  - Ex. `games/mindustry/` (Mindustry Classic, GPL-3.0) : `index.html` (launcher) + `game.html` (app GWT) + `html/` + `assets/`.
-- Jeux tiers = sauvegarde **locale** (localStorage) → **pas de gate Firebase** dans `script.js` ; lien direct `<a href="games/<jeu>/index.html">`.
+- `joxiagame/<jeu>-joxia` — un jeu complet auto-suffisant (HTML/CSS/JS/ressources), servi à la racine par GitHub Pages (`https://joxiagame.github.io/<jeu>-joxia/`).
+  - Ex. `Shapez-joxia` (Shapez.io, GPL-3.0) : `index.html` + `bundle.js` + `main.css` + `res/`.
+  - Ex. `Mindindustry-joxia` (Mindustry Classic, GPL-3.0) : `index.html` (launcher) + `game.html` (app GWT) + `html/` + `assets/`.
+  - Ex. `survivor-joxia` (roguelite, MIT) et `sandspiel-joxia` (sable qui tombe, MIT).
+- La miniature (`<jeu>.png`) reste dans le repo du **hub** (`Joxia-Games`), référencée par la carte du classement.
+- Jeux tiers = sauvegarde **locale** (localStorage) → **pas de gate Firebase** dans `script.js` ; lien direct `<a href="https://joxiagame.github.io/<jeu>-joxia/">`.
 - Référencés dans la section « 🏆 Classement des Meilleurs Jeux 2D » (`index.html`, `.featured-card`), **pas** dans le « Catalogue des Jeux » (mini-jeux maison, authentifiés).
 
 ### Méthodologie d'ajout d'un nouveau jeu
-1. **Cloner** le dépôt officiel **hors du repo** (ex. `C:\Users\basil\shapez-build\`) pour ne pas polluer `games/` avec `node_modules`/sources.
+1. **Cloner** le dépôt officiel **hors du repo** (ex. `C:\Users\basil\shapez-build\`) pour ne pas polluer avec `node_modules`/sources.
 2. **Builder** la version web statique (si npm requis) et récupérer **uniquement** le dossier `build/` final.
-3. **Copier** le build dans `games/<jeu>/` — vérifier que les chemins (JS/CSS/assets) sont **relatifs** (`main.css`, `bundle.js`, `res/…`), jamais absolus (`/…`).
-4. **Ajouter une carte** dans `index.html` (section classement) : titre, description des mécaniques, badge, bouton « Jouer maintenant », miniature (`<jeu>.png`).
-5. **Tester localement** : `python -m http.server 8000` + playwright (ouvrir hub + jeu, capture d'écran, zéro erreur console).
-6. **Documenter** ici (structure + spécificités du build).
+3. **Pousser** le build vers son repo dédié `joxiagame/<jeu>-joxia` (branche `main`) — vérifier que les chemins (JS/CSS/assets) sont **relatifs** (`main.css`, `bundle.js`, `res/…`), jamais absolus (`/…`), car Pages sert sous `/<jeu>-joxia/`.
+4. **Activer GitHub Pages** sur ce repo (Settings → Pages → branche `main`, dossier `/`).
+5. **Ajouter une carte** dans le hub `index.html` (section classement) : titre, description, badge, bouton « Jouer maintenant », miniature (`<jeu>.png` dans le repo hub), lien externe `https://joxiagame.github.io/<jeu>-joxia/`.
+6. **Tester** sur l'URL Pages + playwright (zéro erreur console).
+7. **Documenter** ici (structure + spécificités du build).
 
 ### Build Shapez.io (spécifique)
 - Repo : `tobspr-games/shapez.io` (GPL-3.0). ⚠️ La « Community Edition » ne supporte **plus** le build web.
 - Toolchain : Node (webpack 4 → `NODE_OPTIONS=--openssl-legacy-provider` sur Node 17+), Yarn 1.22, **Java 17** (atlas de textures), **ffmpeg** (audio).
-- Build : `cd gulp && yarn gulp build.web-shapezio` → sortie dans `build/` (copiée vers `games/shapez/`).
+- Build : `cd gulp && yarn gulp build.web-shapezio` → sortie dans `build/` (poussée vers `joxiagame/Shapez-joxia`).
 - **3 corrections requises** (déjà appliquées dans `C:\Users\basil\shapez-build\` ; à refaire si on reclone) :
   1. `gulp/node_modules/fluent-ffmpeg/lib/capabilities.js` : `formatRegexp` → `/^\s*([D ])([E ])\s+(\S+)\s+(.*)$/` (ffmpeg récent aligne le nom de format à droite).
   2. Copier `src/js/core/config.local.template.js` → `src/js/core/config.local.js` (la tâche `localConfig.findOrCreate` n'est pas incluse dans le build de prod).
@@ -97,13 +100,13 @@ Le hub héberge des jeux tiers open-source **statiques** (en plus des mini-jeux 
 ### Build Mindustry (spécifique)
 - Repo source : `Anuken/Mindustry-Classic` (GPL-3.0). ⚠️ Le build HTML5 (GWT) n'existe **que** sur la version Classic (build 40) ; les versions récentes l'ont abandonné.
 - Build web récupéré **pré-compilé** depuis `minidogg/MindustryClassicMirror` (miroir du build HTML5 itch.io, dossier `web/`) → **aucune compilation GWT requise** (Java 8 + GWT serait trop lourd/fragile).
-- Structure copiée vers `games/mindustry/` : `index.html` (launcher + export/import sauvegardes localStorage), `game.html` (app GWT), `html/` (`.nocache.js` + `.cache.js` compilé ~3,4 Mo), `assets/` (sprites/sons/musiques/cartes), `styles.css`, `title.png`, `soundmanager2-*`.
+- Structure poussée vers `joxiagame/Mindindustry-joxia` : `index.html` (launcher + export/import sauvegardes localStorage), `game.html` (app GWT), `html/` (`.nocache.js` + `.cache.js` compilé ~3,4 Mo), `assets/` (sprites/sons/musiques/cartes), `styles.css`, `title.png`, `soundmanager2-*`.
 - **1 correction requise** : `index.html` → chemins **relatifs** `src="title.png"` et `href="game.html"` (au lieu de `/title.png`, `/game.html`).
-- Sauvegarde **locale** (localStorage) → lien direct `<a href="games/mindustry/index.html">`, pas de gate Firebase.
+- Sauvegarde **locale** (localStorage) → lien direct `<a href="https://joxiagame.github.io/Mindindustry-joxia/">`, pas de gate Firebase.
 
 ### Build Survivor (spécifique)
 - Repo source : `canvas-vampire-survivors` (MIT). Roguelite « Vampire Survivors-like », 100 % HTML5 Canvas, **zéro dépendance**, modules ES (`<script type="module">`).
-- Structure copiée vers `games/survivor/` : `index.html`, `styles.css`, `src/` (23 fichiers JS), `hero.svg`, `LICENSE`.
+- Structure poussée vers `joxiagame/survivor-joxia` : `index.html`, `styles.css`, `src/` (23 fichiers JS), `hero.svg`, `LICENSE`.
 - Corrections appliquées à `index.html` : suppression du `<link rel="manifest">` (PWA) + du script d'enregistrement du service worker, et chemins `./docs/hero.svg` / `./docs/og-card.svg` → `./hero.svg` (les `docs/` ne sont pas copiées).
 - ⚠️ i18n **anglais + chinois uniquement** (pas de français). Premier lancement : 2 overlays à fermer (`#howtoClose` puis `#tutorialOfferNo`).
 - Sauvegarde locale (localStorage) → lien direct, pas de gate Firebase.
@@ -111,7 +114,7 @@ Le hub héberge des jeux tiers open-source **statiques** (en plus des mini-jeux 
 ### Build Sandspiel (spécifique)
 - Repo source : `maxbittker/sandspiel` (MIT, « sandtable »). Jeu de sable qui tombe (Rust → WASM via wasm-pack + webpack 5).
 - Build récupéré **pré-compilé** depuis la branche `gh-pages` (sortie webpack) → **aucune compilation Rust/wasm-pack requise**.
-- Structure copiée vers `games/sandspiel/` : `index.html`, `main.<hash>.js` (runtime webpack), `728.<hash>.js` (glue wasm-bindgen, ~1 Mo), `86.<hash>.js` (UI), `<hash>.module.wasm`, `styles.css`, `assets/` (polices + icônes).
+- Structure poussée vers `joxiagame/sandspiel-joxia` : `index.html`, `main.<hash>.js` (runtime webpack), `728.<hash>.js` (glue wasm-bindgen, ~1 Mo), `86.<hash>.js` (UI), `<hash>.module.wasm`, `styles.css`, `assets/` (polices + icônes).
 - **3 corrections requises** :
   1. `main.<hash>.js` : `l.p="/"` → `l.p=""` (publicPath webpack — pilote le chargement des chunks **et** le fetch du `.wasm` ; sans ça, tout casse en sous-dossier).
   2. `index.html` : chemins absolus → relatifs, suppression des scripts pubs/tracking (AdSense, Google Tag Manager, `a.sandspiel.club/app.js` + `/image.gif`) et du smart banner App Store.
