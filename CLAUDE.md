@@ -73,6 +73,7 @@ Le hub héberge des jeux tiers open-source **statiques** (en plus des mini-jeux 
 ### Structure
 - `games/<jeu>/` — un jeu complet auto-suffisant (HTML/CSS/JS/ressources), servi tel quel par GitHub Pages.
   - Ex. `games/shapez/` (Shapez.io, GPL-3.0) : `index.html` + `bundle.js` + `main.css` + `res/`.
+  - Ex. `games/mindustry/` (Mindustry Classic, GPL-3.0) : `index.html` (launcher) + `game.html` (app GWT) + `html/` + `assets/`.
 - Jeux tiers = sauvegarde **locale** (localStorage) → **pas de gate Firebase** dans `script.js` ; lien direct `<a href="games/<jeu>/index.html">`.
 - Référencés dans la section « 🏆 Classement des Meilleurs Jeux 2D » (`index.html`, `.featured-card`), **pas** dans le « Catalogue des Jeux » (mini-jeux maison, authentifiés).
 
@@ -92,3 +93,10 @@ Le hub héberge des jeux tiers open-source **statiques** (en plus des mini-jeux 
   1. `gulp/node_modules/fluent-ffmpeg/lib/capabilities.js` : `formatRegexp` → `/^\s*([D ])([E ])\s+(\S+)\s+(.*)$/` (ffmpeg récent aligne le nom de format à droite).
   2. Copier `src/js/core/config.local.template.js` → `src/js/core/config.local.js` (la tâche `localConfig.findOrCreate` n'est pas incluse dans le build de prod).
   3. `src/js/core/cachebust.js` et `gulp/buildutils.js` : retourner le chemin **relatif** (pas `/v/<hash>/`) pour un hébergement statique en sous-dossier GitHub Pages.
+
+### Build Mindustry (spécifique)
+- Repo source : `Anuken/Mindustry-Classic` (GPL-3.0). ⚠️ Le build HTML5 (GWT) n'existe **que** sur la version Classic (build 40) ; les versions récentes l'ont abandonné.
+- Build web récupéré **pré-compilé** depuis `minidogg/MindustryClassicMirror` (miroir du build HTML5 itch.io, dossier `web/`) → **aucune compilation GWT requise** (Java 8 + GWT serait trop lourd/fragile).
+- Structure copiée vers `games/mindustry/` : `index.html` (launcher + export/import sauvegardes localStorage), `game.html` (app GWT), `html/` (`.nocache.js` + `.cache.js` compilé ~3,4 Mo), `assets/` (sprites/sons/musiques/cartes), `styles.css`, `title.png`, `soundmanager2-*`.
+- **1 correction requise** : `index.html` → chemins **relatifs** `src="title.png"` et `href="game.html"` (au lieu de `/title.png`, `/game.html`).
+- Sauvegarde **locale** (localStorage) → lien direct `<a href="games/mindustry/index.html">`, pas de gate Firebase.

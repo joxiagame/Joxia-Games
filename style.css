@@ -124,6 +124,7 @@ button:active{transform:scale(.96);}
     background:var(--card);border:1px solid var(--line);border-top:4px solid var(--gold);
     border-radius:24px;padding:28px;box-shadow:var(--shadow);overflow:hidden;
 }
+.featured-card + .featured-card{margin-top:18px;}
 .featured-card::after{
     content:"";position:absolute;inset:0;pointer-events:none;
     background:radial-gradient(440px 220px at 0% 0%, rgba(246,168,33,.14), transparent 60%);
