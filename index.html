@@ -8,14 +8,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=4">
+    <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 
     <nav class="navbar">
         <div class="logo">JOXIA</div>
         <div class="search-container">
-            <input type="text" id="searchInput" placeholder="🔍 Rechercher un jeu..." onkeyup="searchGame()">
+            <input type="text" id="searchInput" placeholder="Rechercher un jeu..." onkeyup="searchGame()">
         </div>
         <div class="nav-right">
             <a href="https://discord.gg/BNY6xprSen" target="_blank" class="discord-btn">
@@ -45,7 +45,7 @@
         <h1>Joue, grimpe au <span class="accent">classement</span>,<br>défie tes amis.</h1>
         <p>Une collection de mini-jeux arcade maison. Connecte-toi pour enregistrer tes scores et viser le top&nbsp;10.</p>
         <div class="hero-stats">
-            <div class="hstat"><b>8</b><span>Jeux</span></div>
+            <div class="hstat"><b>9</b><span>Jeux</span></div>
             <div class="hstat"><b>1</b><span>Classement</span></div>
             <div class="hstat"><b>∞</b><span>Fun</span></div>
         </div>
@@ -235,7 +235,7 @@
 
     <div id="authModal" class="modal">
         <div class="modal-content">
-            <span class="close-btn" data-close="authModal">&times;</span>
+            <span class="close-btn" data-close="authModal" role="button" tabindex="0" aria-label="Fermer">&times;</span>
             <h3 id="authTitle">Connexion</h3>
             <input type="text" id="usernameInput" placeholder="Pseudo">
             <input type="password" id="passwordInput" placeholder="Mot de passe">
@@ -249,7 +249,7 @@
 
     <div id="leaderboardModal" class="modal">
         <div class="modal-content" style="max-width: 500px;">
-            <span class="close-btn" id="closeRank" data-close="leaderboardModal">&times;</span>
+            <span class="close-btn" id="closeRank" data-close="leaderboardModal" role="button" tabindex="0" aria-label="Fermer">&times;</span>
             <h3 style="font-family:'Fredoka';color: var(--orange-d); margin-bottom: 20px;">🏆 TOP JOXIA</h3>
             <div id="leaderboardContent" style="max-height: 400px; overflow-y: auto;">
                 <p>Chargement des scores...</p>
@@ -260,7 +260,7 @@
     <!-- ===== MODALE PROFIL (avatar + nom affiché) ===== -->
     <div id="profileModal" class="modal">
         <div class="modal-content modal-wide">
-            <span class="close-btn" data-close="profileModal">&times;</span>
+            <span class="close-btn" data-close="profileModal" role="button" tabindex="0" aria-label="Fermer">&times;</span>
             <h3 class="modal-title">👤 Mon profil</h3>
 
             <div class="avatar-preview"><img id="avatarPreviewBig" src="" alt="Avatar"></div>
@@ -284,7 +284,7 @@
     <!-- ===== MODALE AMIS ===== -->
     <div id="friendsModal" class="modal">
         <div class="modal-content modal-wide">
-            <span class="close-btn" data-close="friendsModal">&times;</span>
+            <span class="close-btn" data-close="friendsModal" role="button" tabindex="0" aria-label="Fermer">&times;</span>
             <h3 class="modal-title">👥 Amis</h3>
 
             <div class="add-friend">
@@ -304,7 +304,7 @@
     <!-- ===== MODALE PARAMÈTRES ===== -->
     <div id="settingsModal" class="modal">
         <div class="modal-content">
-            <span class="close-btn" data-close="settingsModal">&times;</span>
+            <span class="close-btn" data-close="settingsModal" role="button" tabindex="0" aria-label="Fermer">&times;</span>
             <h3 class="modal-title">⚙️ Paramètres</h3>
 
             <div class="setting-row">
@@ -324,6 +324,6 @@
         </div>
     </div>
 
-    <script type="module" src="script.js?v=6"></script>
+    <script type="module" src="script.js?v=7"></script>
 </body>
 </html>

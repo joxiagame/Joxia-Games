@@ -123,7 +123,9 @@ let isSignUpMode = false;
 
 // Boutons "fermer" : chaque modale a un .close-btn avec data-close
 document.querySelectorAll('.close-btn').forEach(btn => {
-    btn.onclick = () => { const id = btn.dataset.close; if (id) closeModal(id); };
+    const close = () => { const id = btn.dataset.close; if (id) closeModal(id); };
+    btn.onclick = close;
+    btn.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); close(); } };
 });
 document.querySelectorAll('.modal').forEach(m => {
     m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); });
@@ -244,9 +246,10 @@ function refreshAvatarPreview() {
 }
 
 function openProfileModal() {
-    if (!currentUser || !profile) return;
-    avatarDraft = Object.assign({ style: 'adventurer', seed: profile.username || '', bg: 'ffd5dc' }, profile.avatar || {});
-    el('displayNameInput').value = profile.displayName || profile.username || '';
+    if (!currentUser) return;
+    const p = profile || defaultProfile(currentUser, currentUser.email.split('@')[0]);
+    avatarDraft = Object.assign({ style: 'adventurer', seed: p.username || '', bg: 'ffd5dc' }, p.avatar || {});
+    el('displayNameInput').value = p.displayName || p.username || '';
     buildAvatarChooser();
     refreshAvatarPreview();
     openModal('profileModal');
@@ -254,7 +257,8 @@ function openProfileModal() {
 
 async function saveProfile() {
     if (!currentUser) return;
-    const displayName = el('displayNameInput').value.trim() || profile.username || '';
+    const fallback = (profile && profile.username) || currentUser.email.split('@')[0];
+    const displayName = el('displayNameInput').value.trim() || fallback;
     await update(ref(db, `users/${currentUser.uid}`), { displayName, avatar: avatarDraft });
     closeModal('profileModal');
 }
@@ -335,8 +339,8 @@ async function addFriendByName() {
     const msg = el('friendMsg');
     const name = input.value.trim();
     if (!name) return;
-    if (!currentUser || !profile) return;
-    const myName = profile.username || '';
+    if (!currentUser) return;
+    const myName = (profile && (profile.username || profile.displayName)) || currentUser.email.split('@')[0];
     msg.className = 'form-msg';
     if (name.toLowerCase() === myName.toLowerCase()) {
         msg.textContent = "Tu ne peux pas t'ajouter toi-même."; msg.classList.add('bad'); return;
