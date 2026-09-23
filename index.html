@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" id="themeColorMeta" content="#fff7ec">
     <title>JOXIA | Gaming Hub</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=3">
+    <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 
@@ -23,11 +24,17 @@
             </a>
             <button class="rank-btn" id="rankBtn">🏆 CLASSEMENT</button>
             <button class="rank-btn fs-btn" id="fsBtn" title="Plein écran" aria-label="Plein écran">⛶</button>
-            <div style="position: relative;">
-                <button class="login-btn">SE CONNECTER</button>
+            <div class="user-wrap">
+                <button class="user-btn" id="userBtn" title="Connexion / Compte">
+                    <img id="userAvatar" class="user-avatar" src="" alt="" style="display:none;">
+                    <span id="userLabel" class="user-label">SE CONNECTER</span>
+                </button>
                 <div id="userMenu" class="user-dropdown" style="display: none;">
-                    <button id="logoutBtn" class="menu-item">Se déconnecter</button>
-                    <button id="deleteAccountBtn" class="menu-item delete-item">Supprimer le compte</button>
+                    <button id="menuProfile" class="menu-item">👤 Mon profil</button>
+                    <button id="menuFriends" class="menu-item">👥 Amis <span id="menuFriendsBadge" class="menu-badge" style="display:none;">0</span></button>
+                    <button id="menuSettings" class="menu-item">⚙️ Paramètres</button>
+                    <button id="logoutBtn" class="menu-item">↪ Se déconnecter</button>
+                    <button id="deleteAccountBtn" class="menu-item delete-item">🗑 Supprimer le compte</button>
                 </div>
             </div>
         </div>
@@ -228,7 +235,7 @@
 
     <div id="authModal" class="modal">
         <div class="modal-content">
-            <span class="close-btn">&times;</span>
+            <span class="close-btn" data-close="authModal">&times;</span>
             <h3 id="authTitle">Connexion</h3>
             <input type="text" id="usernameInput" placeholder="Pseudo">
             <input type="password" id="passwordInput" placeholder="Mot de passe">
@@ -242,7 +249,7 @@
 
     <div id="leaderboardModal" class="modal">
         <div class="modal-content" style="max-width: 500px;">
-            <span class="close-btn" id="closeRank">&times;</span>
+            <span class="close-btn" id="closeRank" data-close="leaderboardModal">&times;</span>
             <h3 style="font-family:'Fredoka';color: var(--orange-d); margin-bottom: 20px;">🏆 TOP JOXIA</h3>
             <div id="leaderboardContent" style="max-height: 400px; overflow-y: auto;">
                 <p>Chargement des scores...</p>
@@ -250,6 +257,73 @@
         </div>
     </div>
 
-    <script type="module" src="script.js?v=5"></script>
+    <!-- ===== MODALE PROFIL (avatar + nom affiché) ===== -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content modal-wide">
+            <span class="close-btn" data-close="profileModal">&times;</span>
+            <h3 class="modal-title">👤 Mon profil</h3>
+
+            <div class="avatar-preview"><img id="avatarPreviewBig" src="" alt="Avatar"></div>
+
+            <label class="field-label">Nom affiché</label>
+            <input type="text" id="displayNameInput" maxlength="20" placeholder="Ton nom affiché">
+
+            <label class="field-label">Style d'avatar</label>
+            <div class="avatar-grid" id="avatarStyleGrid"></div>
+
+            <label class="field-label">Couleur de fond</label>
+            <div class="avatar-colors" id="avatarColorGrid"></div>
+
+            <div class="avatar-actions">
+                <button id="avatarRandomBtn" class="ghost-btn">🎲 Hasard</button>
+                <button id="saveProfileBtn" class="login-btn" style="margin:0;">ENREGISTRER</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODALE AMIS ===== -->
+    <div id="friendsModal" class="modal">
+        <div class="modal-content modal-wide">
+            <span class="close-btn" data-close="friendsModal">&times;</span>
+            <h3 class="modal-title">👥 Amis</h3>
+
+            <div class="add-friend">
+                <input type="text" id="friendNameInput" placeholder="Pseudo d'un ami" maxlength="20">
+                <button id="addFriendBtn" class="login-btn" style="margin:0;">AJOUTER</button>
+            </div>
+            <p id="friendMsg" class="form-msg"></p>
+
+            <h4 class="friend-sub">📥 Demandes reçues</h4>
+            <div id="requestsList" class="friend-list"></div>
+
+            <h4 class="friend-sub">👥 Mes amis</h4>
+            <div id="friendsList" class="friend-list"></div>
+        </div>
+    </div>
+
+    <!-- ===== MODALE PARAMÈTRES ===== -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" data-close="settingsModal">&times;</span>
+            <h3 class="modal-title">⚙️ Paramètres</h3>
+
+            <div class="setting-row">
+                <span>🌙 Thème sombre</span>
+                <label class="switch"><input type="checkbox" id="darkToggle"><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+                <span>🔊 Sons</span>
+                <label class="switch"><input type="checkbox" id="soundToggle" checked><span class="slider"></span></label>
+            </div>
+            <p class="form-msg muted">Les sons arrivent bientôt.</p>
+
+            <div class="settings-actions">
+                <button id="logoutBtn2" class="ghost-btn">↪ Se déconnecter</button>
+                <button id="deleteAccountBtn2" class="ghost-btn danger">🗑 Supprimer le compte</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="script.js?v=6"></script>
 </body>
 </html>

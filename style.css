@@ -197,3 +197,131 @@ button:active{transform:scale(.96);}
   .discord-btn img{width:18px;height:18px;}
   .rank-btn,.login-btn{font-size:11px;padding:8px 10px;}
 }
+
+/* ============================================================
+   COMPTE & AVATAR & AMIS & PARAMÈTRES (Phase Social)
+   ============================================================ */
+
+/* --- Bouton avatar navbar --- */
+.user-wrap{position:relative;}
+.user-btn{
+    display:flex;align-items:center;gap:8px;padding:6px 14px 6px 6px;border-radius:50px;
+    background:#fff;border:1.5px solid var(--line);box-shadow:var(--shadow-sm);
+    color:var(--ink);font-weight:800;font-size:.9rem;cursor:pointer;
+}
+.user-btn:hover{border-color:var(--gold);}
+.user-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;background:var(--cream-2);}
+.user-label{white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis;}
+
+.menu-badge{
+    background:var(--red);color:#fff;font-size:.7rem;font-weight:900;
+    min-width:18px;height:18px;line-height:18px;text-align:center;border-radius:50%;
+    padding:0 5px;margin-left:6px;display:inline-block;
+}
+
+/* --- Modales génériques --- */
+.modal-content{max-height:90vh;overflow-y:auto;}
+.modal-title{font-family:'Fredoka';font-size:1.4rem;font-weight:700;margin-bottom:18px;}
+.modal-wide{max-width:440px;}
+.field-label{display:block;text-align:left;font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--ink-soft);margin:16px 0 8px;}
+.form-msg{font-size:.85rem;font-weight:700;margin-top:8px;min-height:1.2em;text-align:left;}
+.form-msg.ok{color:var(--green);}
+.form-msg.bad{color:var(--red);}
+.form-msg.muted{color:var(--gray);}
+
+/* --- Sélecteur avatar --- */
+.avatar-preview{display:flex;justify-content:center;margin-bottom:6px;}
+.avatar-preview img{width:110px;height:110px;border-radius:24px;background:var(--cream-2);border:2px solid var(--line);}
+.avatar-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;}
+.avatar-opt{padding:0;border-radius:12px;border:2px solid transparent;background:var(--cream-2);cursor:pointer;overflow:hidden;aspect-ratio:1;}
+.avatar-opt img{width:100%;height:100%;object-fit:cover;display:block;}
+.avatar-opt.active{border-color:var(--orange);box-shadow:0 0 0 3px rgba(244,81,30,.25);}
+.avatar-colors{display:flex;gap:8px;flex-wrap:wrap;}
+.color-opt{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);cursor:pointer;padding:0;}
+.color-opt.active{border-color:var(--ink);box-shadow:0 0 0 3px rgba(0,0,0,.15);transform:scale(1.1);}
+.avatar-actions{display:flex;gap:10px;margin-top:20px;}
+.avatar-actions .login-btn{flex:1;}
+
+/* --- Boutons secondaires --- */
+.ghost-btn{background:var(--cream-2);color:var(--ink);border:1.5px solid var(--line);box-shadow:none;}
+.ghost-btn:hover{border-color:var(--gold);}
+.ghost-btn.danger{color:var(--red);border-color:rgba(224,52,31,.35);}
+
+/* --- Amis --- */
+.add-friend{display:flex;gap:8px;margin-top:6px;}
+.add-friend input{flex:1;margin-bottom:0 !important;}
+.add-friend .login-btn{margin:0 !important;flex-shrink:0;padding:10px 14px;}
+.friend-sub{text-align:left;font-size:.82rem;font-weight:900;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.5px;margin:20px 0 10px;}
+.friend-list{display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto;text-align:left;}
+.friend-row,.request-row{display:flex;align-items:center;gap:10px;background:var(--cream-2);border:1px solid var(--line);border-radius:14px;padding:9px 12px;}
+.friend-avatar{width:38px;height:38px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--cream-2);}
+.friend-avatar img{width:100%;height:100%;object-fit:cover;display:block;}
+.friend-name{flex:1;font-weight:800;font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.friend-row .ghost-btn{flex-shrink:0;padding:6px 10px;font-size:.78rem;}
+.dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.dot.on{background:var(--green);box-shadow:0 0 0 3px rgba(47,168,79,.2);}
+.dot.off{background:var(--gray);}
+.request-actions{display:flex;gap:6px;}
+.mini-btn{width:32px;height:32px;border-radius:10px;font-weight:900;cursor:pointer;border:none;color:#fff;}
+.mini-btn.ok{background:var(--green);}
+.mini-btn.no{background:var(--red);}
+.empty{color:var(--gray);font-size:.85rem;font-weight:700;padding:6px 2px;text-align:center;}
+
+/* --- Paramètres --- */
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line);font-weight:800;}
+.setting-row:first-of-type{border-top:1px solid var(--line);}
+.switch{position:relative;display:inline-block;width:48px;height:26px;flex-shrink:0;}
+.switch input{opacity:0;width:0;height:0;margin:0;}
+.slider{position:absolute;cursor:pointer;inset:0;background:var(--gray);border-radius:26px;transition:.2s;}
+.slider::before{content:"";position:absolute;height:20px;width:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;}
+.switch input:checked + .slider{background:var(--orange);}
+.switch input:checked + .slider::before{transform:translateX(22px);}
+.settings-actions{display:flex;flex-direction:column;gap:8px;margin-top:18px;}
+
+/* --- Gardes globales --- */
+html,body{overflow-x:hidden;}
+img{max-width:100%;}
+
+/* --- Thème sombre --- */
+:root[data-theme="dark"]{
+    color-scheme:dark;
+    --ink:#f5ece0; --ink-soft:#c9b8a6;
+    --cream:#1a1512; --cream-2:#241d18; --card:#241d18;
+    --orange:#ff6b3d; --orange-d:#ff8a5c; --amber:#ffb26b; --gold:#ffc14d;
+    --line:rgba(255,220,180,.14);
+    --shadow:0 14px 34px rgba(0,0,0,.5);
+    --shadow-sm:0 6px 16px rgba(0,0,0,.42);
+    --bg-dark:#1a1512; --card-bg:#241d18; --gray:#8a7a6a;
+    --neon:var(--orange);
+}
+:root[data-theme="dark"] body{
+    background:
+      radial-gradient(1100px 520px at 12% -8%, #3a2a1e 0%, rgba(58,42,30,0) 60%),
+      radial-gradient(1000px 520px at 100% 0%, #402418 0%, rgba(64,36,24,0) 55%),
+      linear-gradient(180deg,#1a1512 0%,#201a15 100%);
+}
+:root[data-theme="dark"] .navbar{background:rgba(26,21,18,.85);}
+:root[data-theme="dark"] #searchInput,
+:root[data-theme="dark"] .modal-content input,
+:root[data-theme="dark"] .user-btn,
+:root[data-theme="dark"] .rank-btn,
+:root[data-theme="dark"] .discord-btn{background:#2a231d;color:var(--ink);}
+:root[data-theme="dark"] .game-card.coming{background:rgba(255,255,255,.04);}
+:root[data-theme="dark"] .avatar-preview img,
+:root[data-theme="dark"] .avatar-opt{background:var(--cream-2);}
+
+/* ============================================================
+   CORRECTIFS MOBILE
+   ============================================================ */
+@media (max-width:680px){
+    body{background-attachment:scroll;}
+    .featured-card{flex-direction:column;align-items:stretch;gap:16px;padding:20px;}
+    .featured-thumb{flex:none;width:100%;height:180px;}
+    .featured-badge{top:10px;left:10px;}
+    .navbar{padding-top:max(10px, env(safe-area-inset-top));padding-left:max(4%, env(safe-area-inset-left));padding-right:max(4%, env(safe-area-inset-right));}
+    .footer{padding-bottom:max(40px, env(safe-area-inset-bottom));}
+    .avatar-grid{grid-template-columns:repeat(5,1fr);}
+    .user-btn{font-size:.82rem;padding:5px 11px 5px 5px;}
+    .user-label{max-width:76px;}
+    #leaderboardContent{max-height:60vh;}
+}
