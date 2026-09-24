@@ -58,37 +58,134 @@ window.searchGame = function() {
     }
 };
 
-/* ================= CLASSEMENT GLOBAL ================= */
+/* ================= CLASSEMENT (global + par jeu) ================= */
+const GAME_LABELS = {
+    'Snake': '🐍 Snake', 'Flappy': '🐤 Flappy', 'TETRIS': '🧱 Tetris',
+    'BallBlast': '🔵 Ball Blast', 'BRICK_BLAST': '🧨 Brick Blast', '2048': '🔢 2048',
+    'PACMAN': '🟡 Pac-Man', 'CODEBREAKER': '🔐 Codebreaker', 'CRYPTO': '💎 Crypto Tycoon',
+};
+const lbTabs = el('lbTabs');
+const lbContent = el('leaderboardContent');
+let lbData = null;
+let lbActive = '__global__';
+
+const gameLabel = key => GAME_LABELS[key] || key;
+
+async function loadLeaderboard() {
+    lbContent.innerHTML = '<p class="empty">Chargement des scores…</p>';
+    try {
+        const [gamesSnap, usersSnap, usernamesSnap] = await Promise.all([
+            get(ref(db, 'games')), get(ref(db, 'users')), get(ref(db, 'usernames')),
+        ]);
+        const games = gamesSnap.val() || {};
+        const users = usersSnap.val() || {};
+        const usernames = usernamesSnap.val() || {};
+
+        // 1) Meilleur score par (jeu, identité) — identité = uid si résolue, sinon nom (legacy)
+        const perGame = {};
+        const gameOrder = [];
+        for (const gameKey in games) {
+            const scores = (games[gameKey] && games[gameKey].scores) || {};
+            const best = {};
+            for (const k in scores) {
+                const e = scores[k] || {};
+                const score = parseInt(e.score, 10) || 0;
+                if (score <= 0) continue;
+                const rawName = (e.name || '').trim();
+                let identity;
+                if (e.uid) identity = e.uid;
+                else if (rawName) { const u = usernames[rawName.toLowerCase()]; identity = u || ('name:' + rawName.toLowerCase()); }
+                else identity = 'name:ANONYME';
+                if (!(identity in best) || score > best[identity]) best[identity] = score;
+            }
+            perGame[gameKey] = best;
+            gameOrder.push(gameKey);
+        }
+
+        // 2) Identité -> { name, avatar } (résolution profil)
+        const info = identity => {
+            if (identity.indexOf('name:') === 0) return { name: identity.slice(5), avatar: null };
+            const p = users[identity] || {};
+            return { name: p.displayName || p.username || 'Joueur', avatar: p.avatar || null };
+        };
+
+        // 3) Classement global (somme des meilleurs scores par jeu)
+        const globalMap = {};
+        for (const g of gameOrder) {
+            for (const id in perGame[g]) {
+                if (!globalMap[id]) globalMap[id] = { identity: id, total: 0 };
+                globalMap[id].total += perGame[g][id];
+            }
+        }
+        const globList = Object.values(globalMap)
+            .map(x => Object.assign({}, x, info(x.identity)))
+            .sort((a, b) => b.total - a.total);
+
+        // 4) Classements par jeu
+        const perGameList = {};
+        for (const g of gameOrder) {
+            perGameList[g] = Object.keys(perGame[g])
+                .map(id => Object.assign({ identity: id, score: perGame[g][id] }, info(id)))
+                .sort((a, b) => b.score - a.score);
+        }
+
+        lbData = { globList, perGameList, games: gameOrder };
+        buildLbTabs();
+        renderLeaderboard();
+    } catch (e) {
+        lbContent.innerHTML = '<p class="empty">Impossible de charger le classement.</p>';
+    }
+}
+
+function buildLbTabs() {
+    const tabs = [{ key: '__global__', label: '🌍 Global' }].concat(
+        (lbData ? lbData.games : []).map(g => ({ key: g, label: gameLabel(g) }))
+    );
+    lbTabs.innerHTML = tabs.map(t =>
+        `<button class="lb-tab${t.key === lbActive ? ' active' : ''}" data-game="${t.key}" role="tab" aria-selected="${t.key === lbActive}">${t.label}</button>`
+    ).join('');
+    lbTabs.querySelectorAll('.lb-tab').forEach(b => b.onclick = () => {
+        lbActive = b.dataset.game;
+        buildLbTabs();
+        renderLeaderboard();
+    });
+}
+
+const medal = i => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : String(i + 1);
+
+function lbRow(item, i, scoreKey) {
+    const isMe = currentUser && item.identity === currentUser.uid;
+    const avatar = item.avatar
+        ? `<img class="lb-avatar" src="${avatarUrl(item.avatar, 40)}" alt="">`
+        : `<span class="lb-avatar ghost">👤</span>`;
+    const you = isMe ? '<em class="lb-you">toi</em>' : '';
+    return `<div class="lb-row${isMe ? ' me' : ''}${i < 3 ? ' top' : ''}">
+        <span class="lb-rank">${medal(i)}</span>
+        ${avatar}
+        <span class="lb-name">${escapeHtml(item.name)} ${you}</span>
+        <span class="lb-score">${item[scoreKey]}</span>
+    </div>`;
+}
+
+function renderLeaderboard() {
+    if (!lbData) return;
+    const list = lbActive === '__global__'
+        ? lbData.globList.map((it, i) => lbRow(it, i, 'total'))
+        : lbData.perGameList[lbActive].map((it, i) => lbRow(it, i, 'score'));
+    lbContent.innerHTML = list.length
+        ? list.join('')
+        : '<p class="empty">Aucun score pour l\'instant. Joue pour apparaître ici !</p>';
+}
+
 const rankBtn = el('rankBtn');
-const rankModal = el('leaderboardModal');
-const rankContent = el('leaderboardContent');
 if (rankBtn) {
     rankBtn.onclick = () => {
         openModal('leaderboardModal');
-        rankContent.innerHTML = '<p>Recherche des scores...</p>';
-        onValue(ref(db, 'games'), (snapshot) => {
-            if (snapshot.exists()) {
-                const allGames = snapshot.val();
-                const totals = {};
-                for (const game in allGames) {
-                    const gameScores = allGames[game].scores;
-                    if (gameScores) {
-                        Object.values(gameScores).forEach(p => {
-                            const name = p.name ? p.name.toUpperCase().trim() : 'ANONYME';
-                            totals[name] = (totals[name] || 0) + parseInt(p.score || 0);
-                        });
-                    }
-                }
-                const sorted = Object.entries(totals).map(([name, score]) => ({ name, score })).sort((a, b) => b.score - a.score);
-                rankContent.innerHTML = `<table style="width:100%;max-width:100%;text-align:left;">
-                    <tr style="color:var(--neon);border-bottom:2px solid var(--neon);"><th>#</th><th>JOUEUR</th><th style="text-align:right;">PTS</th></tr>
-                    ${sorted.slice(0, 10).map((p, i) => `<tr><td>${i+1}</td><td>${p.name}</td><td style="text-align:right;color:var(--neon);font-weight:bold;">${p.score}</td></tr>`).join('')}
-                </table>`;
-            } else { rankContent.innerHTML = '<p>Aucun score trouvé.</p>'; }
-        });
+        lbActive = '__global__';
+        buildLbTabs();
+        loadLeaderboard();
     };
 }
-// closeRank est fermé via le handler générique `.close-btn[data-close]` plus bas.
 
 /* ================= PLEIN ÉCRAN ================= */
 const fsBtn = el('fsBtn');
@@ -116,9 +213,15 @@ if (fsBtn) {
 /* ================= AUTHENTIFICATION (modale) ================= */
 const authModal = el('authModal');
 const authTitle = el('authTitle');
+const authSub = el('authSub');
 const switchText = el('switchText');
 const toggleAuthMode = el('toggleAuthMode');
 const confirmBtn = el('confirmBtn');
+const authMsg = el('authMsg');
+const usernameInput = el('usernameInput');
+const passwordInput = el('passwordInput');
+const confirmInput = el('confirmInput');
+const confirmWrap = el('confirmWrap');
 let isSignUpMode = false;
 
 // Boutons "fermer" : chaque modale a un .close-btn avec data-close
@@ -131,29 +234,62 @@ document.querySelectorAll('.modal').forEach(m => {
     m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); });
 });
 
-toggleAuthMode.onclick = (e) => {
-    e.preventDefault();
-    isSignUpMode = !isSignUpMode;
-    authTitle.innerText = isSignUpMode ? 'Inscription' : 'Connexion';
-    switchText.innerText = isSignUpMode ? 'Déjà un compte ?' : 'Pas de compte ?';
-    toggleAuthMode.innerText = isSignUpMode ? 'Se connecter' : "S'inscrire";
+function setAuthMode(signup) {
+    isSignUpMode = signup;
+    authTitle.innerText = signup ? 'Inscription' : 'Connexion';
+    authSub.innerText = signup ? 'Choisis un pseudo et un mot de passe.' : 'Content de te revoir !';
+    switchText.innerText = signup ? 'Déjà un compte ?' : 'Pas de compte ?';
+    toggleAuthMode.innerText = signup ? 'Se connecter' : "S'inscrire";
+    confirmBtn.innerText = signup ? "S'INSCRIRE" : 'SE CONNECTER';
+    confirmWrap.style.display = signup ? 'block' : 'none';
+    authMsg.textContent = ''; authMsg.className = 'form-msg';
+}
+toggleAuthMode.onclick = (e) => { e.preventDefault(); setAuthMode(!isSignUpMode); };
+
+function showAuthMsg(text, ok) {
+    authMsg.textContent = text;
+    authMsg.className = 'form-msg ' + (ok ? 'ok' : 'bad');
+}
+
+const AUTH_ERRORS = {
+    'auth/email-already-in-use': 'Ce pseudo est déjà pris.',
+    'auth/invalid-email': 'Pseudo invalide (a-z, 0-9, . _ -).',
+    'auth/weak-password': 'Mot de passe trop court (6 caractères min.).',
+    'auth/wrong-password': 'Pseudo ou mot de passe incorrect.',
+    'auth/user-not-found': "Aucun compte avec ce pseudo. Inscris-toi !",
+    'auth/invalid-credential': 'Pseudo ou mot de passe incorrect.',
+    'auth/too-many-requests': 'Trop de tentatives. Réessaie dans un instant.',
 };
+const authError = code => AUTH_ERRORS[code] || 'Erreur inattendue. Réessaie.';
 
 confirmBtn.onclick = async () => {
-    const pseudo = el('usernameInput').value.trim();
-    const pass = el('passwordInput').value.trim();
-    if (!pseudo || !pass) return alert('Veuillez remplir tous les champs !');
+    const pseudo = usernameInput.value.trim().toLowerCase();
+    const pass = passwordInput.value;
+    authMsg.className = 'form-msg';
+    if (!/^[a-z0-9._-]{3,20}$/.test(pseudo)) return showAuthMsg('Pseudo invalide : 3–20 caractères (a-z, 0-9, . _ -).');
+    if (pass.length < 6) return showAuthMsg('Mot de passe : 6 caractères minimum.');
+    if (isSignUpMode && pass !== confirmInput.value) return showAuthMsg('Les mots de passe ne correspondent pas.');
     const email = pseudo + '@joxia.fr';
     try {
         if (isSignUpMode) {
+            const taken = await get(ref(db, `usernames/${pseudo}`));
+            if (taken.exists()) return showAuthMsg('Ce pseudo est déjà pris.');
             const cred = await createUserWithEmailAndPassword(auth, email, pass);
             await ensureProfile(cred.user, pseudo);
-            alert('Compte créé avec succès !');
+            closeModal('authModal');
         } else {
             await signInWithEmailAndPassword(auth, email, pass);
+            closeModal('authModal');
         }
-        closeModal('authModal');
-    } catch (e) { alert('Erreur : Pseudo déjà pris ou mot de passe incorrect.'); }
+    } catch (e) { showAuthMsg(authError(e.code)); }
+};
+
+// Afficher / masquer le mot de passe
+el('togglePw').onclick = () => {
+    const show = passwordInput.type === 'password';
+    passwordInput.type = show ? 'text' : 'password';
+    el('togglePw').textContent = show ? '🙈' : '👁';
+    el('togglePw').setAttribute('aria-label', show ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
 };
 
 /* ================= PROFIL ================= */
@@ -252,6 +388,7 @@ function openProfileModal() {
     el('displayNameInput').value = p.displayName || p.username || '';
     buildAvatarChooser();
     refreshAvatarPreview();
+    loadMyStats();
     openModal('profileModal');
 }
 
@@ -261,6 +398,43 @@ async function saveProfile() {
     const displayName = el('displayNameInput').value.trim() || fallback;
     await update(ref(db, `users/${currentUser.uid}`), { displayName, avatar: avatarDraft });
     closeModal('profileModal');
+}
+
+/* ================= MES STATS (profil) ================= */
+async function loadMyStats() {
+    const box = el('profileStats');
+    if (!box || !currentUser) return;
+    box.innerHTML = '<p class="empty">Chargement de tes stats…</p>';
+    try {
+        const [gamesSnap, usernamesSnap] = await Promise.all([
+            get(ref(db, 'games')), get(ref(db, 'usernames')),
+        ]);
+        const games = gamesSnap.val() || {};
+        const usernames = usernamesSnap.val() || {};
+        const myUid = currentUser.uid;
+        const best = {};
+        for (const g in games) {
+            const scores = (games[g] && games[g].scores) || {};
+            for (const k in scores) {
+                const e = scores[k] || {};
+                const uid = e.uid || usernames[(e.name || '').trim().toLowerCase()];
+                if (uid !== myUid) continue;
+                const s = parseInt(e.score, 10) || 0;
+                if (!(g in best) || s > best[g]) best[g] = s;
+            }
+        }
+        const rows = Object.entries(best);
+        const total = rows.reduce((a, [, v]) => a + v, 0);
+        box.innerHTML = `
+            <div class="stat-total"><b>${total.toLocaleString('fr-FR')}</b><span>points au total</span></div>
+            ${rows.length
+                ? `<div class="stat-list">${rows.map(([g, s]) =>
+                    `<div class="stat-row"><span>${gameLabel(g)}</span><b>${s.toLocaleString('fr-FR')}</b></div>`).join('')}</div>`
+                : '<p class="empty">Joue à un jeu pour gagner tes premiers points !</p>'}
+        `;
+    } catch (e) {
+        box.innerHTML = '<p class="empty">Stats indisponibles.</p>';
+    }
 }
 
 /* ================= AMIS ================= */

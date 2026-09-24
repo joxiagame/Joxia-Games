@@ -237,9 +237,24 @@
         <div class="modal-content">
             <span class="close-btn" data-close="authModal" role="button" tabindex="0" aria-label="Fermer">&times;</span>
             <h3 id="authTitle">Connexion</h3>
-            <input type="text" id="usernameInput" placeholder="Pseudo">
-            <input type="password" id="passwordInput" placeholder="Mot de passe">
-            <button id="confirmBtn" class="login-btn" style="width: 100%; margin-top: 6px;">VALIDER</button>
+            <p id="authSub" class="auth-sub">Content de te revoir !</p>
+
+            <label class="field-label" for="usernameInput">Pseudo</label>
+            <input type="text" id="usernameInput" placeholder="Ton pseudo" maxlength="20" autocomplete="username">
+
+            <label class="field-label" for="passwordInput">Mot de passe</label>
+            <div class="pw-wrap">
+                <input type="password" id="passwordInput" placeholder="6 caractères min." maxlength="72" autocomplete="current-password">
+                <button type="button" id="togglePw" class="pw-toggle" aria-label="Afficher le mot de passe" tabindex="-1">👁</button>
+            </div>
+
+            <div id="confirmWrap" style="display:none;">
+                <label class="field-label" for="confirmInput">Confirmer le mot de passe</label>
+                <input type="password" id="confirmInput" placeholder="Retape ton mot de passe" maxlength="72" autocomplete="new-password">
+            </div>
+
+            <p id="authMsg" class="form-msg"></p>
+            <button id="confirmBtn" class="login-btn" style="width: 100%; margin-top: 6px;">SE CONNECTER</button>
             <p class="auth-switch">
                 <span id="switchText">Pas de compte ?</span>
                 <a href="#" id="toggleAuthMode">S'inscrire</a>
@@ -248,12 +263,11 @@
     </div>
 
     <div id="leaderboardModal" class="modal">
-        <div class="modal-content" style="max-width: 500px;">
-            <span class="close-btn" id="closeRank" data-close="leaderboardModal" role="button" tabindex="0" aria-label="Fermer">&times;</span>
-            <h3 style="font-family:'Fredoka';color: var(--orange-d); margin-bottom: 20px;">🏆 TOP JOXIA</h3>
-            <div id="leaderboardContent" style="max-height: 400px; overflow-y: auto;">
-                <p>Chargement des scores...</p>
-            </div>
+        <div class="modal-content lb-modal">
+            <span class="close-btn" data-close="leaderboardModal" role="button" tabindex="0" aria-label="Fermer">&times;</span>
+            <h3 class="modal-title lb-title">🏆 Classement</h3>
+            <div class="lb-tabs" id="lbTabs" role="tablist" aria-label="Filtre du classement"></div>
+            <div id="leaderboardContent" class="lb-list"></div>
         </div>
     </div>
 
@@ -278,6 +292,9 @@
                 <button id="avatarRandomBtn" class="ghost-btn">🎲 Hasard</button>
                 <button id="saveProfileBtn" class="login-btn" style="margin:0;">ENREGISTRER</button>
             </div>
+
+            <h4 class="friend-sub">📊 Mes stats</h4>
+            <div id="profileStats" class="profile-stats"></div>
         </div>
     </div>
 
