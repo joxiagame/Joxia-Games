@@ -3,236 +3,211 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" id="themeColorMeta" content="#0f0f23">
-    <title>JOXIA | Arcade Esports</title>
+    <meta name="theme-color" id="themeColorMeta" content="#050812">
+    <title>JOXIA — Ton espace gaming</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=6">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
 
-    <nav class="navbar">
-        <div class="logo">JOXIA</div>
-        <div class="search-container">
-            <input type="text" id="searchInput" placeholder="Rechercher un jeu..." onkeyup="searchGame()">
+    <!-- ================= SIDEBAR ================= -->
+    <aside class="sidebar" id="sidebar">
+        <div class="logo">
+            <span class="logo-pad">🎮</span>
+            <span class="logo-text">JOXIA</span>
         </div>
-        <div class="nav-right">
-            <a href="https://discord.gg/BNY6xprSen" target="_blank" class="discord-btn">
-                <img src="https://cdn-icons-png.flaticon.com/512/5968/5968756.png" alt="Discord">
-                DISCORD
-            </a>
-            <button class="rank-btn" id="rankBtn">🏆 CLASSEMENT</button>
-            <button class="rank-btn fs-btn" id="fsBtn" title="Plein écran" aria-label="Plein écran">⛶</button>
-            <div class="user-wrap">
-                <button class="user-btn" id="userBtn" title="Connexion / Compte">
-                    <img id="userAvatar" class="user-avatar" src="" alt="" style="display:none;">
-                    <span id="userLabel" class="user-label">SE CONNECTER</span>
+
+        <nav class="nav" aria-label="Navigation principale">
+            <button class="nav-item active" data-nav="home">
+                <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg>
+                <span>Accueil</span>
+            </button>
+            <button class="nav-item" data-nav="games">
+                <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7" width="19" height="10" rx="5"/><path d="M7 10v4M5 12h4"/><circle cx="15.5" cy="10.5" r=".9" fill="currentColor"/><circle cx="18" cy="12" r=".9" fill="currentColor"/></svg>
+                <span>Mes jeux</span>
+            </button>
+            <button class="nav-item" data-nav="leaderboard">
+                <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v4a6 6 0 0 1-12 0z"/><path d="M6 6H4a3 3 0 0 0 3 5"/><path d="M18 6h2a3 3 0 0 1-3 5"/><path d="M12 14v4"/><path d="M8 21h8"/></svg>
+                <span>Classement</span>
+            </button>
+            <button class="nav-item" data-nav="friends">
+                <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span>Amis <em class="nav-badge" id="navFriendsBadge" style="display:none;">0</em></span>
+            </button>
+            <button class="nav-item" data-nav="messages">
+                <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.5 0-2.9-.4-4.1-1L3 20l1-5.4A8.5 8.5 0 1 1 21 11.5z"/></svg>
+                <span>Messages</span>
+            </button>
+            <button class="nav-item" data-nav="settings">
+                <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h13"/><circle cx="15" cy="7" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="19" cy="17" r="1.6"/></svg>
+                <span>Paramètres</span>
+            </button>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button class="sp-connect" id="spConnect">SE CONNECTER</button>
+            <div class="sp-user" id="spUser" style="display:none;">
+                <div class="sp-row">
+                    <div class="sp-avatar-wrap">
+                        <img id="spAvatar" src="" alt="Mon avatar">
+                        <span class="sp-dot" id="spDot"></span>
+                    </div>
+                    <div class="sp-meta">
+                        <span class="sp-name" id="spName">—</span>
+                        <span class="sp-level" id="spLevel">Niveau 1</span>
+                    </div>
+                </div>
+                <div class="sp-xp" title="Progression de niveau">
+                    <span class="sp-xp-fill" id="spXpFill"></span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ================= MAIN ================= -->
+    <div class="main">
+
+        <!-- Topbar -->
+        <header class="topbar">
+            <div class="search" id="searchWrap">
+                <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                <input type="text" id="searchInput" placeholder="Rechercher un jeu, un joueur, une catégorie..." onkeyup="searchGame()" autocomplete="off">
+            </div>
+            <div class="topbar-actions">
+                <a href="https://discord.gg/BNY6xprSen" target="_blank" rel="noopener" class="pill pill-discord">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M20.3 4.4A19.8 19.8 0 0 0 15.9 3l-.2.4a16 16 0 0 1 4.3 2.1 13.6 13.6 0 0 0-12 0A16 16 0 0 1 8.3 3.4L8.1 3a19.8 19.8 0 0 0-4.4 1.4C.9 8.6.3 12.6.6 16.6A20 20 0 0 0 6.7 19l.5-.8a12 12 0 0 1-1.9-.9l.5-.4a14.2 14.2 0 0 0 12.4 0l.5.4a12 12 0 0 1-1.9.9l.5.8a20 20 0 0 0 6.1-2.4c.4-4.6-.6-8.6-2.6-12.2ZM8.7 14.2c-1.2 0-2.1-1-2.1-2.3s.9-2.3 2.1-2.3 2.1 1 2.1 2.3-.9 2.3-2.1 2.3Zm6.6 0c-1.2 0-2.1-1-2.1-2.3s.9-2.3 2.1-2.3 2.1 1 2.1 2.3-.9 2.3-2.1 2.3Z"/></svg>
+                    Discord
+                </a>
+                <button class="pill" id="rankBtn">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v4a6 6 0 0 1-12 0z"/><path d="M6 6H4a3 3 0 0 0 3 5"/><path d="M18 6h2a3 3 0 0 1-3 5"/><path d="M12 14v4"/><path d="M8 21h8"/></svg>
+                    Classement
                 </button>
-                <div id="userMenu" class="user-dropdown" style="display: none;">
-                    <button id="menuProfile" class="menu-item">👤 Mon profil</button>
-                    <button id="menuFriends" class="menu-item">👥 Amis <span id="menuFriendsBadge" class="menu-badge" style="display:none;">0</span></button>
-                    <button id="menuSettings" class="menu-item">⚙️ Paramètres</button>
-                    <button id="logoutBtn" class="menu-item">↪ Se déconnecter</button>
-                    <button id="deleteAccountBtn" class="menu-item delete-item">🗑 Supprimer le compte</button>
-                </div>
+                <button class="pill pill-online" id="onlinePill" title="Joueurs en ligne">
+                    <span class="online-dot"></span>
+                    En ligne <span id="onlineCount"></span>
+                </button>
+                <button class="pill pill-fs" id="fsBtn" title="Plein écran" aria-label="Plein écran">⛶</button>
             </div>
-        </div>
-    </nav>
+        </header>
 
-    <header class="hero">
-        <span class="hero-badge">⚡ ESPORTS ARENA</span>
-        <h1>Joue, grimpe au <span class="accent">classement</span>,<br>défie tes amis.</h1>
-        <p>Une collection de mini-jeux arcade maison. Connecte-toi pour enregistrer tes scores et viser le top&nbsp;10.</p>
-        <div class="hero-stats">
-            <div class="hstat"><b>9</b><span>Jeux</span></div>
-            <div class="hstat"><b>1</b><span>Classement</span></div>
-            <div class="hstat"><b>∞</b><span>Fun</span></div>
-        </div>
-    </header>
+        <!-- Hero immersif -->
+        <section class="hero">
+            <div class="hero-content">
+                <span class="hero-badge">🎮 Ton hub de jeux</span>
+                <h1>Joue, partage,<br>et vis <span class="accent">ta passion.</span></h1>
+                <p class="hero-desc">Découvre des jeux, retrouve ta communauté et lance-toi dans de nouvelles aventures.</p>
+                <div class="hero-benefits">
+                    <div class="benefit">
+                        <span class="benefit-ico">⚡</span>
+                        <div><b>Découvre</b><span>des jeux incroyables</span></div>
+                    </div>
+                    <div class="benefit">
+                        <span class="benefit-ico">👥</span>
+                        <div><b>Joue</b><span>avec tes amis</span></div>
+                    </div>
+                    <div class="benefit">
+                        <span class="benefit-ico">🏆</span>
+                        <div><b>Progresse</b><span>et grimpe dans le classement</span></div>
+                    </div>
+                </div>
+            </div>
 
-    <section class="ranking-section" aria-label="Classement des meilleurs jeux 2D">
-        <h2 class="section-title">🏆 Classement des Meilleurs Jeux 2D</h2>
-        <div class="featured-card">
-            <span class="featured-badge">⭐ #1 — Coup de cœur Automatisations</span>
-            <div class="featured-thumb">
-                <img src="shapez.png" alt="Shapez.io — usine d'automatisation" class="featured-img">
-            </div>
-            <div class="featured-body">
-                <h3>Shapez.io</h3>
-                <p class="featured-desc">Découpe, peins, fusionne et empile des formes géométriques. Construis des tapis roulants, automatise tes chaînes de production et débloque des améliorations pour livrer des formes toujours plus complexes.</p>
-                <div class="featured-tags">
-                    <span>⚙️ Automatisation</span>
-                    <span>🟦 Tapis roulants</span>
-                    <span>⬆️ Améliorations</span>
+            <div class="hero-visual" aria-hidden="true">
+                <div class="glow glow-a"></div>
+                <div class="glow glow-b"></div>
+                <div class="screen">
+                    <div class="screen-sky"></div>
+                    <div class="screen-grid"></div>
+                    <div class="screen-play">▶</div>
                 </div>
-                <a href="https://joxiagame.github.io/Shapez-joxia/" target="_blank" rel="noopener" class="play-btn">▶ Jouer maintenant</a>
+                <div class="gamepad">
+                    <svg viewBox="0 0 200 120" fill="none">
+                        <defs>
+                            <linearGradient id="gpad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0" stop-color="#1b2440"/>
+                                <stop offset="1" stop-color="#0b1020"/>
+                            </linearGradient>
+                        </defs>
+                        <rect x="12" y="18" width="176" height="84" rx="42" fill="url(#gpad)" stroke="rgba(255,255,255,.14)"/>
+                        <rect x="46" y="42" width="14" height="36" rx="5" fill="#FF6A2A"/>
+                        <rect x="33" y="54" width="40" height="14" rx="5" fill="#FF6A2A"/>
+                        <circle cx="112" cy="60" r="9" fill="#FF6A2A" opacity=".9"/>
+                        <circle cx="150" cy="46" r="7" fill="#FF8A3D"/>
+                        <circle cx="166" cy="70" r="7" fill="#FF6A2A"/>
+                        <circle cx="150" cy="88" r="7" fill="rgba(245,244,241,.55)"/>
+                        <circle cx="134" cy="70" r="7" fill="rgba(245,244,241,.55)"/>
+                    </svg>
+                </div>
+                <span class="chip chip-top">9 jeux jouables</span>
+                <span class="chip chip-bottom">🏆 Classement en direct</span>
             </div>
-        </div>
+        </section>
 
-        <div class="featured-card">
-            <span class="featured-badge">⭐ #2 — Tycoon + Arcade</span>
-            <div class="featured-thumb">
-                <img src="mindustry.png" alt="Mindustry — usine et tower defense" class="featured-img">
-            </div>
-            <div class="featured-body">
-                <h3>Mindustry</h3>
-                <p class="featured-desc">Exploite des ressources, construis convoyeurs et tourelles pour automatiser ta production, puis repousse des vagues d'ennemis toujours plus intenses. Le mélange parfait entre gestion d'usine et tower defense arcade.</p>
-                <div class="featured-tags">
-                    <span>🏭 Usine</span>
-                    <span>🛡️ Tower Defense</span>
-                    <span>🎮 Arcade</span>
+        <!-- Tes jeux -->
+        <section class="section" id="games">
+            <div class="section-head">
+                <div>
+                    <h2 class="section-title">🎮 Tes jeux</h2>
+                    <p class="section-sub">Clique sur un jeu pour commencer à jouer</p>
                 </div>
-                <a href="https://joxiagame.github.io/Mindustry-joxia/" target="_blank" rel="noopener" class="play-btn">▶ Jouer maintenant</a>
+                <button class="link-btn" id="toggleGames">Voir tous les jeux →</button>
             </div>
-        </div>
+            <div class="game-grid" id="gamesGrid"></div>
+        </section>
 
-        <div class="featured-card">
-            <span class="featured-badge">⭐ #3 — Survie infinie</span>
-            <div class="featured-thumb">
-                <img src="survivor.png" alt="Survivor — roguelite survie" class="featured-img">
-            </div>
-            <div class="featured-body">
-                <h3>Survivor</h3>
-                <p class="featured-desc">Survis face à des vagues d'ennemis sans fin. Tes armes tirent automatiquement : concentre-toi sur tes déplacements, ramasse l'XP et choisis tes améliorations à chaque niveau pour devenir surpuissant.</p>
-                <div class="featured-tags">
-                    <span>🎯 Roguelite</span>
-                    <span>⚔️ Vagues infinies</span>
-                    <span>✨ Améliorations</span>
+        <!-- Découvre aussi -->
+        <section class="section" id="discover">
+            <div class="section-head">
+                <div>
+                    <h2 class="section-title">🔥 Découvre aussi</h2>
+                    <p class="section-sub">Des jeux de la communauté, prêts à explorer</p>
                 </div>
-                <a href="https://joxiagame.github.io/survivor-joxia/" target="_blank" rel="noopener" class="play-btn">▶ Jouer maintenant</a>
+                <a class="link-btn" href="#discover">Voir tous →</a>
             </div>
-        </div>
+            <div class="game-grid discover-grid">
+                <a class="game-card disco" href="https://joxiagame.github.io/Shapez-joxia/" target="_blank" rel="noopener">
+                    <div class="game-card__cover"><img src="shapez.png" alt="Shapez.io" loading="lazy" decoding="async"></div>
+                    <div class="game-card__content">
+                        <h3>Shapez.io</h3>
+                        <p class="disco-sub">Usine & automatisation</p>
+                        <div class="game-card__tags"><span>Automatisation</span><span>Usine</span></div>
+                    </div>
+                </a>
+                <a class="game-card disco" href="https://joxiagame.github.io/Mindustry-joxia/" target="_blank" rel="noopener">
+                    <div class="game-card__cover"><img src="mindustry.png" alt="Mindustry" loading="lazy" decoding="async"></div>
+                    <div class="game-card__content">
+                        <h3>Mindustry</h3>
+                        <p class="disco-sub">Tycoon & tower defense</p>
+                        <div class="game-card__tags"><span>Tycoon</span><span>Tower Defense</span></div>
+                    </div>
+                </a>
+                <a class="game-card disco" href="https://joxiagame.github.io/survivor-joxia/" target="_blank" rel="noopener">
+                    <div class="game-card__cover"><img src="survivor.png" alt="Survivor" loading="lazy" decoding="async"></div>
+                    <div class="game-card__content">
+                        <h3>Survivor</h3>
+                        <p class="disco-sub">Roguelite & survie</p>
+                        <div class="game-card__tags"><span>Roguelite</span><span>Survie</span></div>
+                    </div>
+                </a>
+                <a class="game-card disco" href="https://joxiagame.github.io/sandspiel-joxia/" target="_blank" rel="noopener">
+                    <div class="game-card__cover"><img src="sandspiel.png" alt="Sandspiel" loading="lazy" decoding="async"></div>
+                    <div class="game-card__content">
+                        <h3>Sandspiel</h3>
+                        <p class="disco-sub">Bac à sable & physique</p>
+                        <div class="game-card__tags"><span>Bac à sable</span><span>Physique</span></div>
+                    </div>
+                </a>
+            </div>
+        </section>
 
-        <div class="featured-card">
-            <span class="featured-badge">⭐ #4 — Bac à sable créatif</span>
-            <div class="featured-thumb">
-                <img src="sandspiel.png" alt="Sandspiel — bac à sable physique" class="featured-img">
-            </div>
-            <div class="featured-body">
-                <h3>Sandspiel</h3>
-                <p class="featured-desc">Un bac à sable physique apaisant : fais couler du sable, verse de l'eau, allume du feu et fais pousser des plantes. Observe les éléments interagir entre eux et laisse libre cours à ta créativité.</p>
-                <div class="featured-tags">
-                    <span>🏖️ Sable qui tombe</span>
-                    <span>⚗️ Physique</span>
-                    <span>🌱 Éléments</span>
-                </div>
-                <a href="https://joxiagame.github.io/sandspiel-joxia/" target="_blank" rel="noopener" class="play-btn">▶ Jouer maintenant</a>
-            </div>
-        </div>
-    </section>
+        <footer class="footer">
+            © 2026 <b>JOXIA Games</b> — fait avec ⚡ &nbsp;•&nbsp; <a href="https://discord.gg/BNY6xprSen" target="_blank">Rejoindre le Discord</a>
+        </footer>
+    </div>
 
-    <main class="container">
-        <h2 class="section-title">Catalogue des Jeux</h2>
-        <div class="game-grid">
-            <a href="#" class="game-card" id="snakeLink">
-                <div class="game-thumb">
-                    <img src="Snake.png" alt="Snake" class="game-img">
-                    <div class="play-overlay">▶ JOUER</div>
-                </div>
-                <div class="game-info">
-                    <h3>Snake Joxia</h3>
-                    <p>Arcade • Serpent rétro</p>
-                </div>
-            </a>
-             <a href="#" class="game-card" id="FlappyLink">
-                <span class="card-badge">MAJ</span>
-                <div class="game-thumb">
-                    <img src="Flappy Bird.png" alt="Flappy Bird" class="game-img">
-                    <div class="play-overlay">▶ JOUER</div>
-                </div>
-                <div class="game-info">
-                    <h3>Flappy Joxia</h3>
-                    <p>Arcade • Vol & réflexes</p>
-                </div>
-            </a>
-            <a href="#" class="game-card" id="TetrisLink">
-                <div class="game-thumb">
-                    <img src="Tetris.png" alt="Tetris" class="game-img">
-                    <div class="play-overlay">▶ JOUER</div>
-                </div>
-                <div class="game-info">
-                    <h3>Tetris Joxia</h3>
-                    <p>Puzzle • Briques</p>
-                </div>
-            </a>
-            <a href="#" class="game-card" id="BallBlastLink">
-                <div class="game-thumb">
-                    <img src="Ball Blast.png" alt="Ball Blast" class="game-img">
-                    <div class="play-overlay">▶ JOUER</div>
-                </div>
-                <div class="game-info">
-                    <h3>Ball Blast Joxia</h3>
-                    <p>Action • Tir & boss</p>
-                </div>
-            </a>
-            <a href="#" class="game-card" id="BrickBlastLink">
-                <span class="card-badge">NOUVEAU</span>
-                <div class="game-thumb">
-                    <img src="Brick Blast.png" alt="Brick Blast" class="game-img">
-                    <div class="play-overlay">▶ JOUER</div>
-                </div>
-                <div class="game-info">
-                    <h3>Brick Blast Joxia</h3>
-                    <p>Arcade • Casse-briques</p>
-                </div>
-            </a>
-            <a href="#" class="game-card" id="Game2048Link">
-                <span class="card-badge">NOUVEAU</span>
-                <div class="game-thumb">
-                    <img src="2048.png" alt="2048" class="game-img">
-                    <div class="play-overlay">▶ JOUER</div>
-                </div>
-                <div class="game-info">
-                    <h3>2048 Joxia</h3>
-                    <p>Puzzle • Fusion de nombres</p>
-                </div>
-            </a>
-            <a href="#" class="game-card" id="PacmanLink">
-                <span class="card-badge">NOUVEAU</span>
-                <div class="game-thumb">
-                    <img src="Pac-Man.png" alt="Pac-Man" class="game-img">
-                    <div class="play-overlay">▶ JOUER</div>
-                </div>
-                <div class="game-info">
-                    <h3>Pac-Man Joxia</h3>
-                    <p>Arcade • Labyrinthe</p>
-                </div>
-            </a>
-            <a href="#" class="game-card" id="CodebreakerLink">
-                <span class="card-badge">NOUVEAU</span>
-                <div class="game-thumb">
-                    <img src="Codebreaker.svg" alt="Codebreaker" class="game-img">
-                    <div class="play-overlay">▶ JOUER</div>
-                </div>
-                <div class="game-info">
-                    <h3>Codebreaker Joxia</h3>
-                    <p>Puzzle • Décodage</p>
-                </div>
-            </a>
-            <a href="#" class="game-card" id="CryptoLink">
-                <span class="card-badge">NOUVEAU</span>
-                <div class="game-thumb">
-                    <img src="Crypto Tycoon.png" alt="Crypto Tycoon" class="game-img">
-                    <div class="play-overlay">▶ JOUER</div>
-                </div>
-                <div class="game-info">
-                    <h3>Crypto Tycoon Joxia</h3>
-                    <p>Stratégie • Trading crypto</p>
-                </div>
-            </a>
-            <div class="game-card coming">
-                <span class="card-badge soon">BIENTÔT</span>
-                <div class="game-thumb"><span>+</span></div>
-                <div class="game-info"><h3>Prochainement</h3><p>En développement</p></div>
-            </div>
-        </div>
-    </main>
-
-    <footer class="footer">
-        © 2026 <b>JOXIA Games</b> — fait avec ⚡ &nbsp;•&nbsp; <a href="https://discord.gg/BNY6xprSen" target="_blank">Rejoindre le Discord</a>
-    </footer>
-
+    <!-- ================= MODALES (logique inchangée) ================= -->
     <div id="authModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" data-close="authModal" role="button" tabindex="0" aria-label="Fermer">&times;</span>
@@ -271,7 +246,6 @@
         </div>
     </div>
 
-    <!-- ===== MODALE PROFIL (avatar + nom affiché) ===== -->
     <div id="profileModal" class="modal">
         <div class="modal-content modal-wide">
             <span class="close-btn" data-close="profileModal" role="button" tabindex="0" aria-label="Fermer">&times;</span>
@@ -298,7 +272,6 @@
         </div>
     </div>
 
-    <!-- ===== MODALE AMIS ===== -->
     <div id="friendsModal" class="modal">
         <div class="modal-content modal-wide">
             <span class="close-btn" data-close="friendsModal" role="button" tabindex="0" aria-label="Fermer">&times;</span>
@@ -318,7 +291,6 @@
         </div>
     </div>
 
-    <!-- ===== MODALE PARAMÈTRES ===== -->
     <div id="settingsModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" data-close="settingsModal" role="button" tabindex="0" aria-label="Fermer">&times;</span>
@@ -341,6 +313,6 @@
         </div>
     </div>
 
-    <script type="module" src="script.js?v=7"></script>
+    <script type="module" src="script.js?v=8"></script>
 </body>
 </html>

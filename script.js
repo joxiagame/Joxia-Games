@@ -49,13 +49,17 @@ let presenceUnsub = null;
 
 /* ================= RECHERCHE ================= */
 window.searchGame = function() {
-    const input = el('searchInput').value.toLowerCase();
-    const cards = document.getElementsByClassName('game-card');
-    for (const card of cards) {
+    const input = el('searchInput').value.trim().toLowerCase();
+    const grid = el('gamesGrid');
+    if (!grid) return;
+    grid.classList.toggle('show-all', !!input);
+    grid.querySelectorAll('.game-card').forEach(card => {
         const h3 = card.querySelector('h3');
         const title = h3 ? h3.innerText.toLowerCase() : '';
-        card.style.display = title.includes(input) ? 'block' : 'none';
-    }
+        card.style.display = (!input || title.includes(input)) ? '' : 'none';
+    });
+    const btn = el('toggleGames');
+    if (btn) btn.textContent = input ? 'Réduire ↑' : (showAll ? 'Réduire ↑' : 'Voir tous les jeux →');
 };
 
 /* ================= CLASSEMENT (global + par jeu) ================= */
@@ -332,16 +336,50 @@ function setupPresence(uid) {
 }
 
 function renderUserButton() {
+    const connect = el('spConnect');
+    const userBox = el('spUser');
     if (currentUser && profile) {
-        const name = (profile.displayName || profile.username || '').toUpperCase();
-        el('userLabel').textContent = ' ' + name;
-        el('userAvatar').src = avatarUrl(profile.avatar);
-        el('userAvatar').style.display = 'inline-block';
-        el('userBtn').classList.add('logged');
+        const name = profile.displayName || profile.username || 'Joueur';
+        el('spName').textContent = name;
+        el('spAvatar').src = avatarUrl(profile.avatar, 96);
+        el('spDot').className = 'sp-dot ' + (profile.online ? 'on' : 'off');
+        connect.style.display = 'none';
+        userBox.style.display = 'block';
+        loadSidebarLevel();
     } else {
-        el('userLabel').textContent = 'SE CONNECTER';
-        el('userAvatar').style.display = 'none';
-        el('userBtn').classList.remove('logged');
+        connect.style.display = 'flex';
+        userBox.style.display = 'none';
+    }
+}
+
+/* Niveau & XP de la sidebar (somme des meilleurs scores par jeu) */
+async function loadSidebarLevel() {
+    if (!currentUser) return;
+    try {
+        const [gamesSnap, usernamesSnap] = await Promise.all([
+            get(ref(db, 'games')), get(ref(db, 'usernames')),
+        ]);
+        const games = gamesSnap.val() || {};
+        const usernames = usernamesSnap.val() || {};
+        const myUid = currentUser.uid;
+        const best = {};
+        for (const g in games) {
+            const scores = (games[g] && games[g].scores) || {};
+            for (const k in scores) {
+                const e = scores[k] || {};
+                const uid = e.uid || usernames[(e.name || '').trim().toLowerCase()];
+                if (uid !== myUid) continue;
+                const s = parseInt(e.score, 10) || 0;
+                if (!(g in best) || s > best[g]) best[g] = s;
+            }
+        }
+        const total = Object.values(best).reduce((a, b) => a + b, 0);
+        const level = 1 + Math.floor(total / 1000);
+        el('spLevel').textContent = 'Niveau ' + level;
+        el('spXpFill').style.width = Math.min(100, (total % 1000) / 1000 * 100) + '%';
+    } catch (e) {
+        el('spLevel').textContent = 'Niveau 1';
+        el('spXpFill').style.width = '0%';
     }
 }
 
@@ -455,7 +493,7 @@ function detachListeners() {
 function renderRequests(requests) {
     const list = el('requestsList');
     const entries = requests ? Object.entries(requests) : [];
-    const badge = el('menuFriendsBadge');
+    const badge = el('navFriendsBadge');
     badge.textContent = entries.length;
     badge.style.display = entries.length ? 'inline-block' : 'none';
     if (!entries.length) {
@@ -477,14 +515,17 @@ function renderRequests(requests) {
 
 async function renderFriends(friends) {
     const list = el('friendsList');
+    const count = el('onlineCount');
     if (!currentUser || !profile) {
         list.innerHTML = '<p class="empty">Connecte-toi pour voir tes amis.</p>';
+        if (count) count.textContent = '';
         return;
     }
     friends = friends || {};
     const ids = Object.keys(friends);
     if (!ids.length) {
         list.innerHTML = "<p class=\"empty\">Aucun ami pour l'instant. Ajoute-en un !</p>";
+        if (count) count.textContent = profile.online ? '(1)' : '';
         return;
     }
     list.innerHTML = ids.map(uid => `
@@ -494,6 +535,8 @@ async function renderFriends(friends) {
             <span class="dot off"></span>
             <button class="ghost-btn danger" data-uid="${uid}">Retirer</button>
         </div>`).join('');
+    let onlineN = profile.online ? 1 : 0;
+    if (count) count.textContent = onlineN ? `(${onlineN})` : '';
     ids.forEach(async uid => {
         const snap = await get(ref(db, `users/${uid}`));
         const p = snap.val();
@@ -506,6 +549,7 @@ async function renderFriends(friends) {
         dot.className = 'dot ' + (p.online ? 'on' : 'off');
         dot.title = p.online ? 'En ligne' : 'Hors ligne';
         row.querySelector('button').onclick = () => removeFriend(uid);
+        if (p.online) { onlineN++; if (count) count.textContent = `(${onlineN})`; }
     });
 }
 
@@ -572,25 +616,63 @@ function applyTheme(theme, saveProfile = true) {
     if (theme !== 'dark' && theme !== 'light') theme = 'light';
     document.documentElement.setAttribute('data-theme', theme);
     el('darkToggle').checked = theme === 'dark';
-    el('themeColorMeta').content = theme === 'dark' ? '#0f0f23' : '#f4f2ff';
+    el('themeColorMeta').content = theme === 'dark' ? '#050812' : '#f4f2ff';
     try { localStorage.setItem('joxia-theme', theme); } catch (e) {}
     if (saveProfile && currentUser) {
         update(ref(db, `users/${currentUser.uid}/theme`), theme).catch(() => {});
     }
 }
 
-/* ================= JEUX (ouverture centralisée) ================= */
+/* ================= JEUX (rendu dynamique + ouverture centralisée) ================= */
 const GAMES = [
-    { id: 'snakeLink',       url: 'https://joxiagame.github.io/Snake-Joxia/' },
-    { id: 'FlappyLink',      url: 'https://joxiagame.github.io/Flappy-Bird-Joxia/' },
-    { id: 'TetrisLink',      url: 'https://joxiagame.github.io/Tetris-Joxia/' },
-    { id: 'BallBlastLink',   url: 'https://joxiagame.github.io/Ball-Blast-joxia/' },
-    { id: 'BrickBlastLink',  url: 'https://joxiagame.github.io/Breakout-Joxia/' },
-    { id: 'Game2048Link',    url: 'https://joxiagame.github.io/2048-joxia/' },
-    { id: 'PacmanLink',      url: 'https://joxiagame.github.io/Pacman-Joxia/' },
-    { id: 'CodebreakerLink', url: 'https://joxiagame.github.io/Codebreaker-Joxia/' },
-    { id: 'CryptoLink',      url: 'https://joxiagame.github.io/Crypto-Tycoon-Joxia/' },
+    { name: 'Snake Joxia',       image: 'Snake.png',          tags: ['Arcade', 'Rétro'],       url: 'https://joxiagame.github.io/Snake-Joxia/' },
+    { name: 'Flappy Joxia',      image: 'Flappy Bird.png',    tags: ['Arcade', 'Réflexes'],    url: 'https://joxiagame.github.io/Flappy-Bird-Joxia/', isNew: true },
+    { name: 'Tetris Joxia',      image: 'Tetris.png',         tags: ['Puzzle', 'Briques'],     url: 'https://joxiagame.github.io/Tetris-Joxia/' },
+    { name: 'Ball Blast Joxia',  image: 'Ball Blast.png',     tags: ['Action', 'Tir'],         url: 'https://joxiagame.github.io/Ball-Blast-joxia/' },
+    { name: 'Brick Blast Joxia', image: 'Brick Blast.png',    tags: ['Arcade', 'Casse-briques'], url: 'https://joxiagame.github.io/Breakout-Joxia/', isNew: true },
+    { name: '2048 Joxia',        image: '2048.png',           tags: ['Puzzle', 'Chiffres'],    url: 'https://joxiagame.github.io/2048-joxia/', isNew: true },
+    { name: 'Pac-Man Joxia',     image: 'Pac-Man.png',        tags: ['Arcade', 'Labyrinthe'],  url: 'https://joxiagame.github.io/Pacman-Joxia/', isNew: true },
+    { name: 'Codebreaker Joxia', image: 'Codebreaker.png',    tags: ['Puzzle', 'Décodage'],    url: 'https://joxiagame.github.io/Codebreaker-Joxia/', isNew: true },
+    { name: 'Crypto Tycoon Joxia', image: 'Crypto Tycoon.png', tags: ['Stratégie', 'Trading'], url: 'https://joxiagame.github.io/Crypto-Tycoon-Joxia/', isNew: true },
 ];
+
+let showAll = false;
+
+function renderGames() {
+    const grid = el('gamesGrid');
+    if (!grid) return;
+    grid.innerHTML = GAMES.map((g, i) => `
+        <article class="game-card${i >= 5 ? ' extra' : ''}">
+            <div class="game-card__cover">
+                <img src="${g.image}" alt="${g.name}" loading="lazy" decoding="async">
+                ${g.isNew ? '<span class="cover-badge">NOUVEAU</span>' : ''}
+            </div>
+            <div class="game-card__content">
+                <div class="game-card__header">
+                    <span class="game-icon">${g.name.charAt(0)}</span>
+                    <div>
+                        <h3>${g.name}</h3>
+                        <span class="game-status"><i class="dot on"></i> Jouable en ligne</span>
+                    </div>
+                </div>
+                <div class="game-card__tags">${g.tags.map(t => `<span>${t}</span>`).join('')}</div>
+                <button class="game-card__play${i === 0 ? ' primary' : ''}" data-url="${g.url}">▶ Jouer</button>
+            </div>
+        </article>`).join('');
+    grid.querySelectorAll('.game-card__play').forEach(b => {
+        b.onclick = () => openGame(b.dataset.url);
+    });
+}
+
+const toggleGames = el('toggleGames');
+if (toggleGames) {
+    toggleGames.onclick = () => {
+        showAll = !showAll;
+        const grid = el('gamesGrid');
+        if (grid) grid.classList.toggle('show-all', showAll);
+        toggleGames.textContent = showAll ? 'Réduire ↑' : 'Voir tous les jeux →';
+    };
+}
 
 function openGame(url) {
     if (!auth.currentUser) {
@@ -610,25 +692,31 @@ function openGame(url) {
     window.location.href = `${url}?${params.toString()}`;
 }
 
-GAMES.forEach(g => {
-    const link = el(g.id);
-    if (link) link.onclick = (e) => { e.preventDefault(); openGame(g.url); };
+renderGames();
+
+/* ================= NAVIGATION SIDEBAR + PROFIL ================= */
+const spConnect = el('spConnect');
+if (spConnect) spConnect.onclick = () => openModal('authModal');
+
+const navActions = {
+    home: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    games: () => { const g = el('games'); if (g) g.scrollIntoView({ behavior: 'smooth' }); },
+    leaderboard: () => { openModal('leaderboardModal'); lbActive = '__global__'; buildLbTabs(); loadLeaderboard(); },
+    friends: () => openModal('friendsModal'),
+    messages: () => alert('💬 Les messages arrivent bientôt !'),
+    settings: () => openModal('settingsModal'),
+};
+document.querySelectorAll('.nav-item').forEach(btn => {
+    const key = btn.dataset.nav;
+    const action = navActions[key];
+    btn.onclick = () => {
+        document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b === btn));
+        if (action) action();
+    };
 });
 
-/* ================= MENU UTILISATEUR ================= */
-const userBtn = el('userBtn');
-const userMenu = el('userMenu');
-
-userBtn.onclick = (e) => {
-    e.stopPropagation();
-    if (!auth.currentUser) openModal('authModal');
-    else userMenu.style.display = (userMenu.style.display === 'flex') ? 'none' : 'flex';
-};
-window.onclick = () => { userMenu.style.display = 'none'; };
-
-el('menuProfile').onclick = () => { userMenu.style.display = 'none'; openProfileModal(); };
-el('menuFriends').onclick = () => { userMenu.style.display = 'none'; openModal('friendsModal'); };
-el('menuSettings').onclick = () => { userMenu.style.display = 'none'; openModal('settingsModal'); };
+const spUser = el('spUser');
+if (spUser) spUser.onclick = () => openProfileModal();
 
 el('saveProfileBtn').onclick = saveProfile;
 el('avatarRandomBtn').onclick = () => {
@@ -640,7 +728,7 @@ el('addFriendBtn').onclick = addFriendByName;
 el('darkToggle').onchange = (e) => applyTheme(e.target.checked ? 'dark' : 'light');
 el('soundToggle').onchange = (e) => { try { localStorage.setItem('joxia-sound', e.target.checked ? 'on' : 'off'); } catch (err) {} };
 
-function doLogout() { signOut(auth); userMenu.style.display = 'none'; }
+function doLogout() { signOut(auth); }
 function doDelete() {
     const user = auth.currentUser;
     if (!user || !confirm('⚠️ SUPPRIMER DÉFINITIVEMENT TON COMPTE ?')) return;
@@ -652,8 +740,6 @@ function doDelete() {
         alert('Compte supprimé.');
     }).catch(() => alert('Action sensible : reconnecte-toi avant.'));
 }
-el('logoutBtn').onclick = doLogout;
-el('deleteAccountBtn').onclick = doDelete;
 el('logoutBtn2').onclick = doLogout;
 el('deleteAccountBtn2').onclick = doDelete;
 
