@@ -17,7 +17,7 @@ const auth = getAuth(app);
 const db = getDatabase(app);
 
 /* ================= CONSTANTES AVATAR ================= */
-const AVATAR_STYLES = ['adventurer','avataaars','big-smile','bottts','croodles','dylan','fun-emoji','lorelei','micah','notionists','open-peeps','pixel-art','thumbs'];
+const AVATAR_STYLES = ['adventurer','avataaars','big-ears','big-smile','croodles','dylan','lorelei','micah','notionists','open-peeps','personas'];
 const AVATAR_BG = ['ffd5dc','c0aede','b6e3f4','d1f4d9','ffd9a8','ffe3a8','c8e6c9','transparent'];
 
 function avatarUrl(avatar, size = 96) {
@@ -442,7 +442,12 @@ function buildAvatarChooser() {
 
 function refreshAvatarPreview() {
     el('avatarPreviewBig').src = avatarUrl(avatarDraft, 160);
-    document.querySelectorAll('.avatar-opt').forEach(b => b.classList.toggle('active', b.dataset.style === avatarDraft.style));
+    // Re-génère aussi les vignettes pour qu'elles suivent le seed + fond actuels
+    document.querySelectorAll('.avatar-opt').forEach(b => {
+        b.classList.toggle('active', b.dataset.style === avatarDraft.style);
+        const img = b.querySelector('img');
+        if (img) img.src = avatarUrl({ style: b.dataset.style, seed: avatarDraft.seed || 'X', bg: avatarDraft.bg }, 80);
+    });
     document.querySelectorAll('.color-opt').forEach(b => b.classList.toggle('active', b.dataset.bg === avatarDraft.bg));
 }
 
