@@ -47,6 +47,14 @@ let friendsListener = null;
 let requestsListener = null;
 let presenceUnsub = null;
 
+/* ================= COMPTEUR EN LIGNE (temps réel) ================= */
+onValue(ref(db, 'presence'), snap => {
+    const data = snap.val() || {};
+    const n = Object.keys(data).length;
+    const c = el('onlineCount');
+    if (c) c.textContent = n ? `(${n})` : '';
+});
+
 /* ================= RECHERCHE ================= */
 window.searchGame = function() {
     const input = el('searchInput').value.trim().toLowerCase();
@@ -306,7 +314,7 @@ function defaultProfile(user, username) {
         createdAt: Date.now(),
         online: false,
         lastSeen: Date.now(),
-        theme: 'dark',
+        theme: 'light',
         friends: {},
     };
 }
@@ -326,11 +334,14 @@ function setupPresence(uid) {
     const connectedRef = ref(db, '.info/connected');
     const onlineRef = ref(db, `users/${uid}/online`);
     const lastSeenRef = ref(db, `users/${uid}/lastSeen`);
+    const presenceRef = ref(db, `presence/${uid}`);
     presenceUnsub = onValue(connectedRef, snap => {
         if (snap.val() === true) {
             onDisconnect(onlineRef).remove();
             onDisconnect(lastSeenRef).set(Date.now());
+            onDisconnect(presenceRef).remove();
             set(onlineRef, true);
+            set(presenceRef, true);
         }
     });
 }
@@ -515,17 +526,14 @@ function renderRequests(requests) {
 
 async function renderFriends(friends) {
     const list = el('friendsList');
-    const count = el('onlineCount');
     if (!currentUser || !profile) {
         list.innerHTML = '<p class="empty">Connecte-toi pour voir tes amis.</p>';
-        if (count) count.textContent = '';
         return;
     }
     friends = friends || {};
     const ids = Object.keys(friends);
     if (!ids.length) {
         list.innerHTML = "<p class=\"empty\">Aucun ami pour l'instant. Ajoute-en un !</p>";
-        if (count) count.textContent = profile.online ? '(1)' : '';
         return;
     }
     list.innerHTML = ids.map(uid => `
@@ -535,8 +543,6 @@ async function renderFriends(friends) {
             <span class="dot off"></span>
             <button class="ghost-btn danger" data-uid="${uid}">Retirer</button>
         </div>`).join('');
-    let onlineN = profile.online ? 1 : 0;
-    if (count) count.textContent = onlineN ? `(${onlineN})` : '';
     ids.forEach(async uid => {
         const snap = await get(ref(db, `users/${uid}`));
         const p = snap.val();
@@ -549,7 +555,6 @@ async function renderFriends(friends) {
         dot.className = 'dot ' + (p.online ? 'on' : 'off');
         dot.title = p.online ? 'En ligne' : 'Hors ligne';
         row.querySelector('button').onclick = () => removeFriend(uid);
-        if (p.online) { onlineN++; if (count) count.textContent = `(${onlineN})`; }
     });
 }
 
@@ -616,8 +621,8 @@ function applyTheme(theme, saveProfile = true) {
     if (theme !== 'dark' && theme !== 'light') theme = 'light';
     document.documentElement.setAttribute('data-theme', theme);
     el('darkToggle').checked = theme === 'dark';
-    el('themeColorMeta').content = theme === 'dark' ? '#050812' : '#f4f2ff';
-    try { localStorage.setItem('joxia-theme', theme); } catch (e) {}
+    el('themeColorMeta').content = theme === 'dark' ? '#050812' : '#FFF7EC';
+    try { localStorage.setItem('joxia-theme-v2', theme); } catch (e) {}
     if (saveProfile && currentUser) {
         update(ref(db, `users/${currentUser.uid}/theme`), theme).catch(() => {});
     }
@@ -745,7 +750,7 @@ el('deleteAccountBtn2').onclick = doDelete;
 
 /* ================= INITIALISATION ================= */
 // Thème appliqué dès le chargement (avant la résolution de l'auth)
-applyTheme(localStorage.getItem('joxia-theme') || 'dark', false);
+applyTheme(localStorage.getItem('joxia-theme-v2') || 'light', false);
 try {
     el('soundToggle').checked = localStorage.getItem('joxia-sound') !== 'off';
 } catch (e) {}
@@ -759,7 +764,7 @@ onAuthStateChanged(auth, async (user) => {
         if (profileListener) { profileListener(); profileListener = null; }
         profileListener = onValue(ref(db, `users/${user.uid}`), snap => {
             profile = snap.val() || {};
-            applyTheme(profile.theme || localStorage.getItem('joxia-theme') || 'dark', false);
+            applyTheme(localStorage.getItem('joxia-theme-v2') || 'light', false);
             renderUserButton();
         });
         attachFriendsListeners(user.uid);
