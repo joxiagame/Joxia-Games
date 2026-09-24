@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, deleteUser } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getDatabase, ref, onValue, get, set, update, remove, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, onValue, get, set, update, remove, onDisconnect, push, query, limitToLast, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCPecKQH6DURfYitjY4bXMeW0URLrcNnsI",
@@ -46,6 +46,13 @@ let profileListener = null;
 let friendsListener = null;
 let requestsListener = null;
 let presenceUnsub = null;
+let chatGlobalUnsub = null;
+let chatListUnsub = null;
+let chatThreadUnsub = null;
+let chatThread = null;           // { type:'global' } | { type:'dm', convId, with, withName, withAvatar }
+let globalMessages = [];
+let dmMessages = [];
+const userCache = {};
 
 /* ================= COMPTEUR EN LIGNE (temps réel) ================= */
 onValue(ref(db, 'presence'), snap => {
@@ -506,6 +513,9 @@ function attachFriendsListeners(uid) {
 function detachListeners() {
     [profileListener, friendsListener, requestsListener].forEach(f => { if (f) f(); });
     profileListener = friendsListener = requestsListener = null;
+    [chatGlobalUnsub, chatListUnsub, chatThreadUnsub].forEach(f => { if (f) f(); });
+    chatGlobalUnsub = chatListUnsub = chatThreadUnsub = null;
+    chatThread = null;
     if (presenceUnsub) { presenceUnsub(); presenceUnsub = null; }
 }
 
@@ -549,6 +559,7 @@ async function renderFriends(friends) {
             <div class="friend-avatar"><img src="" alt=""></div>
             <div class="friend-name">…</div>
             <span class="dot off"></span>
+            <button class="mini-btn fmsg" data-uid="${uid}" title="Envoyer un message"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.5 0-2.9-.4-4.1-1L3 20l1-5.4A8.5 8.5 0 1 1 21 11.5z"/></svg></button>
             <button class="ghost-btn danger" data-uid="${uid}">Retirer</button>
         </div>`).join('');
     ids.forEach(async uid => {
@@ -562,7 +573,8 @@ async function renderFriends(friends) {
         const dot = row.querySelector('.dot');
         dot.className = 'dot ' + (p.online ? 'on' : 'off');
         dot.title = p.online ? 'En ligne' : 'Hors ligne';
-        row.querySelector('button').onclick = () => removeFriend(uid);
+        row.querySelector('.mini-btn.fmsg').onclick = () => startDM(uid);
+        row.querySelector('.ghost-btn.danger').onclick = () => removeFriend(uid);
     });
 }
 
@@ -623,6 +635,199 @@ async function removeFriend(uid) {
     updates[`users/${uid}/friends/${myUid}`] = null;
     await update(ref(db), updates);
 }
+
+/* ================= CHAT (DM entre amis + salon communautaire) ================= */
+function convId(a, b) { return [a, b].sort().join('_'); }
+
+// Ouvre (ou crée) une conversation privée avec un ami depuis la liste d'amis
+function startDM(uid) {
+    if (!currentUser) return;
+    const cid = convId(currentUser.uid, uid);
+    if (!chatGlobalUnsub) attachChatListeners(currentUser.uid);
+    openThread('dm', cid, uid);
+    closeModal('friendsModal');
+    openModal('chatModal');
+}
+
+async function getUser(uid) {
+    if (!uid) return null;
+    if (userCache[uid]) return userCache[uid];
+    const snap = await get(ref(db, `users/${uid}`));
+    const p = snap.val();
+    if (p) userCache[uid] = p;
+    return p;
+}
+
+function fmtTime(ts) {
+    if (!ts) return '';
+    return new Date(ts).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+}
+
+// Snapshot « expéditeur » réutilisé pour chaque message envoyé
+function senderSnapshot() {
+    const name = (profile && (profile.displayName || profile.username)) || (currentUser ? currentUser.email.split('@')[0] : '?');
+    return {
+        from: currentUser.uid,
+        name: name,
+        avatar: (profile && profile.avatar) || { style: 'adventurer', seed: name },
+    };
+}
+
+function openChat() {
+    if (!currentUser) {
+        alert('Connecte-toi pour discuter !');
+        openModal('authModal');
+        return;
+    }
+    if (!chatGlobalUnsub) attachChatListeners(currentUser.uid);
+    if (!chatThread) openThread('global');
+    openModal('chatModal');
+    const input = el('chatInput'); if (input) input.focus();
+}
+
+function attachChatListeners(uid) {
+    if (chatGlobalUnsub) chatGlobalUnsub();
+    if (chatListUnsub) chatListUnsub();
+    // Salon communautaire — 100 derniers messages en temps réel
+    chatGlobalUnsub = onValue(query(ref(db, 'globalChat/messages'), limitToLast(100)), snap => {
+        globalMessages = snapToMessages(snap);
+        if (chatThread && chatThread.type === 'global') renderMessages();
+    });
+    // Liste des conversations privées (index côté utilisateur)
+    chatListUnsub = onValue(ref(db, `userChats/${uid}`), snap => renderChatList(snap.val() || {}));
+}
+
+function snapToMessages(snap) {
+    const v = snap.val() || {};
+    return Object.entries(v).map(([key, m]) => Object.assign({ key }, m));
+}
+
+let chatListCache = {};
+
+function renderChatList(list) {
+    const box = el('chatList');
+    if (!box) return;
+    chatListCache = list || {};
+    const entries = Object.entries(chatListCache).sort((a, b) => (b[1].lastTs || 0) - (a[1].lastTs || 0));
+    const unreadTotal = entries.reduce((s, [, c]) => s + (c.unread || 0), 0);
+    const badge = el('navChatBadge');
+    if (badge) { badge.textContent = unreadTotal; badge.style.display = unreadTotal ? 'inline-block' : 'none'; }
+
+    const globalActive = chatThread && chatThread.type === 'global';
+    const html = [`
+        <button class="chat-item${globalActive ? ' active' : ''}" data-type="global">
+            <span class="chat-item__ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
+            <span class="chat-item__meta"><b>Communauté</b><span>Salon public</span></span>
+        </button>`];
+    entries.forEach(([cid, c]) => {
+        const active = chatThread && chatThread.type === 'dm' && chatThread.convId === cid;
+        html.push(`
+            <button class="chat-item${active ? ' active' : ''}" data-conv="${cid}">
+                <span class="chat-item__avatar"><img src="${avatarUrl(c.withAvatar || { style: 'adventurer', seed: c.withName || 'x' }, 64)}" alt=""></span>
+                <span class="chat-item__meta"><b>${escapeHtml(c.withName || 'Ami')}</b><span>${escapeHtml(c.lastText || 'Commence la discussion')}</span></span>
+                ${c.unread ? `<em class="chat-item__badge">${c.unread}</em>` : ''}
+            </button>`);
+    });
+    box.innerHTML = html.join('');
+    box.querySelector('[data-type="global"]').onclick = () => openThread('global');
+    box.querySelectorAll('.chat-item[data-conv]').forEach(b => {
+        b.onclick = () => openThread('dm', b.dataset.conv, chatListCache[b.dataset.conv] && chatListCache[b.dataset.conv].with);
+    });
+}
+
+async function openThread(type, convId, withUid) {
+    if (!currentUser) return;
+    if (chatThreadUnsub) { chatThreadUnsub(); chatThreadUnsub = null; }
+    chatThread = { type, convId };
+    const title = el('chatTitle');
+    const sub = el('chatSubtitle');
+
+    if (type === 'global') {
+        title.textContent = 'Communauté Joxia';
+        sub.innerHTML = '<i class="dot on"></i> Salon public — sois sympa';
+        renderMessages();
+    } else {
+        const friend = (await getUser(withUid)) || {};
+        const name = friend.displayName || friend.username || 'Ami';
+        chatThread.with = friend;
+        chatThread.otherUid = withUid;
+        chatThread.withName = name;
+        chatThread.withAvatar = friend.avatar || { style: 'adventurer', seed: name };
+        title.textContent = name;
+        sub.innerHTML = `<i class="dot ${friend.online ? 'on' : 'off'}"></i> ${friend.online ? 'En ligne' : 'Hors ligne'}`;
+        dmMessages = [];
+        update(ref(db, `userChats/${currentUser.uid}/${convId}/unread`), 0).catch(() => {});
+        chatThreadUnsub = onValue(query(ref(db, `chats/${convId}/messages`), limitToLast(100)), snap => {
+            dmMessages = snapToMessages(snap);
+            if (chatThread && chatThread.type === 'dm' && chatThread.convId === convId) renderMessages();
+        });
+    }
+    renderChatList(chatListCache);
+    const layout = el('chatLayout'); if (layout) layout.classList.add('open');
+    const input = el('chatInput'); if (input) input.focus();
+}
+
+function renderMessages() {
+    const box = el('chatMessages');
+    if (!box) return;
+    const list = chatThread && chatThread.type === 'global' ? globalMessages : dmMessages;
+    if (!list.length) {
+        box.innerHTML = '<p class="chat-empty">Aucun message. Dis bonjour !</p>';
+        return;
+    }
+    box.innerHTML = list.map(m => {
+        const mine = m.from === currentUser.uid;
+        return `<div class="msg${mine ? ' mine' : ''}">
+            ${mine ? '' : `<img class="msg__avatar" src="${avatarUrl(m.avatar || { style: 'adventurer', seed: m.name || 'x' }, 48)}" alt="">`}
+            <div class="msg__body">
+                ${(!mine && m.name) ? `<span class="msg__name">${escapeHtml(m.name)}</span>` : ''}
+                <span class="msg__text">${escapeHtml(m.text)}</span>
+                <span class="msg__time">${fmtTime(m.ts)}</span>
+            </div>
+        </div>`;
+    }).join('');
+    box.scrollTop = box.scrollHeight;
+}
+
+async function sendMessage() {
+    if (!currentUser || !chatThread) return;
+    const input = el('chatInput');
+    const text = input.value.trim();
+    if (!text) return;
+    const s = senderSnapshot();
+    const msg = Object.assign({}, s, { text, ts: Date.now() });
+
+    if (chatThread.type === 'global') {
+        await push(ref(db, 'globalChat/messages'), msg);
+    } else {
+        const cid = chatThread.convId;
+        const otherUid = chatThread.otherUid;
+        await push(ref(db, `chats/${cid}/messages`), msg);
+        const updates = {};
+        updates[`userChats/${currentUser.uid}/${cid}`] = {
+            with: otherUid, withName: chatThread.withName, withAvatar: chatThread.withAvatar,
+            lastText: text, lastTs: msg.ts, unread: 0,
+        };
+        updates[`userChats/${otherUid}/${cid}`] = {
+            with: currentUser.uid, withName: s.name, withAvatar: s.avatar,
+            lastText: text, lastTs: msg.ts, unread: increment(1),
+        };
+        await update(ref(db), updates);
+    }
+    input.value = '';
+    input.focus();
+}
+
+const chatSendBtn = el('chatSendBtn');
+if (chatSendBtn) chatSendBtn.onclick = sendMessage;
+const chatInputEl = el('chatInput');
+if (chatInputEl) chatInputEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+const chatBackBtn = el('chatBackBtn');
+if (chatBackBtn) chatBackBtn.onclick = () => {
+    const layout = el('chatLayout'); if (layout) layout.classList.remove('open');
+};
 
 /* ================= PARAMÈTRES (thème / sons) ================= */
 function applyTheme(theme, saveProfile = true) {
@@ -716,7 +921,7 @@ const navActions = {
     games: () => { const g = el('games'); if (g) g.scrollIntoView({ behavior: 'smooth' }); },
     leaderboard: () => { openModal('leaderboardModal'); lbActive = '__global__'; buildLbTabs(); loadLeaderboard(); },
     friends: () => openModal('friendsModal'),
-    messages: () => alert('Les messages arrivent bientôt !'),
+    messages: () => openChat(),
     settings: () => openModal('settingsModal'),
 };
 document.querySelectorAll('.nav-item').forEach(btn => {
@@ -776,6 +981,7 @@ onAuthStateChanged(auth, async (user) => {
             renderUserButton();
         });
         attachFriendsListeners(user.uid);
+        attachChatListeners(user.uid);
     } else {
         profile = null;
         detachListeners();
