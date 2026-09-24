@@ -780,7 +780,7 @@ function renderMessages() {
         return `<div class="msg${mine ? ' mine' : ''}">
             ${mine ? '' : `<img class="msg__avatar" src="${avatarUrl(m.avatar || { style: 'adventurer', seed: m.name || 'x' }, 48)}" alt="">`}
             <div class="msg__body">
-                ${(!mine && m.name) ? `<span class="msg__name">${escapeHtml(m.name)}</span>` : ''}
+                ${m.name ? `<span class="msg__name">${escapeHtml(m.name)}</span>` : ''}
                 <span class="msg__text">${escapeHtml(m.text)}</span>
                 <span class="msg__time">${fmtTime(m.ts)}</span>
             </div>
