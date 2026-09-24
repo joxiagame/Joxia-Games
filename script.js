@@ -657,7 +657,7 @@ function renderGames() {
     grid.innerHTML = GAMES.map((g, i) => `
         <article class="game-card${i >= 5 ? ' extra' : ''}">
             <div class="game-card__cover">
-                <img src="${g.image}" alt="${g.name}" loading="lazy" decoding="async">
+                <img src="${g.image}?v=2" alt="${g.name}" loading="lazy" decoding="async">
                 ${g.isNew ? '<span class="cover-badge">NOUVEAU</span>' : ''}
             </div>
             <div class="game-card__content">
