@@ -81,7 +81,8 @@ async function loadLeaderboard() {
         const users = usersSnap.val() || {};
         const usernames = usernamesSnap.val() || {};
 
-        // 1) Meilleur score par (jeu, identité) — identité = uid si résolue, sinon nom (legacy)
+        // 1) Meilleur score par (jeu, identité) — identité = uid résolue uniquement.
+        //    Les scores sans compte lié (legacy/test) sont ignorés → classement remis à zéro.
         const perGame = {};
         const gameOrder = [];
         for (const gameKey in games) {
@@ -92,10 +93,10 @@ async function loadLeaderboard() {
                 const score = parseInt(e.score, 10) || 0;
                 if (score <= 0) continue;
                 const rawName = (e.name || '').trim();
-                let identity;
+                let identity = null;
                 if (e.uid) identity = e.uid;
-                else if (rawName) { const u = usernames[rawName.toLowerCase()]; identity = u || ('name:' + rawName.toLowerCase()); }
-                else identity = 'name:ANONYME';
+                else if (rawName) identity = usernames[rawName.toLowerCase()] || null;
+                if (!identity) continue;
                 if (!(identity in best) || score > best[identity]) best[identity] = score;
             }
             perGame[gameKey] = best;
@@ -301,7 +302,7 @@ function defaultProfile(user, username) {
         createdAt: Date.now(),
         online: false,
         lastSeen: Date.now(),
-        theme: 'light',
+        theme: 'dark',
         friends: {},
     };
 }
@@ -571,7 +572,7 @@ function applyTheme(theme, saveProfile = true) {
     if (theme !== 'dark' && theme !== 'light') theme = 'light';
     document.documentElement.setAttribute('data-theme', theme);
     el('darkToggle').checked = theme === 'dark';
-    el('themeColorMeta').content = theme === 'dark' ? '#1a1512' : '#fff7ec';
+    el('themeColorMeta').content = theme === 'dark' ? '#0f0f23' : '#f4f2ff';
     try { localStorage.setItem('joxia-theme', theme); } catch (e) {}
     if (saveProfile && currentUser) {
         update(ref(db, `users/${currentUser.uid}/theme`), theme).catch(() => {});
@@ -658,7 +659,7 @@ el('deleteAccountBtn2').onclick = doDelete;
 
 /* ================= INITIALISATION ================= */
 // Thème appliqué dès le chargement (avant la résolution de l'auth)
-applyTheme(localStorage.getItem('joxia-theme') || 'light', false);
+applyTheme(localStorage.getItem('joxia-theme') || 'dark', false);
 try {
     el('soundToggle').checked = localStorage.getItem('joxia-sound') !== 'off';
 } catch (e) {}
@@ -672,7 +673,7 @@ onAuthStateChanged(auth, async (user) => {
         if (profileListener) { profileListener(); profileListener = null; }
         profileListener = onValue(ref(db, `users/${user.uid}`), snap => {
             profile = snap.val() || {};
-            applyTheme(profile.theme || localStorage.getItem('joxia-theme') || 'light', false);
+            applyTheme(profile.theme || localStorage.getItem('joxia-theme') || 'dark', false);
             renderUserButton();
         });
         attachFriendsListeners(user.uid);
