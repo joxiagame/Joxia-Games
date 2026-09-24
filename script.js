@@ -72,9 +72,9 @@ window.searchGame = function() {
 
 /* ================= CLASSEMENT (global + par jeu) ================= */
 const GAME_LABELS = {
-    'Snake': '🐍 Snake', 'Flappy': '🐤 Flappy', 'TETRIS': '🧱 Tetris',
-    'BallBlast': '🔵 Ball Blast', 'BRICK_BLAST': '🧨 Brick Blast', '2048': '🔢 2048',
-    'PACMAN': '🟡 Pac-Man', 'CODEBREAKER': '🔐 Codebreaker', 'CRYPTO': '💎 Crypto Tycoon',
+    'Snake': 'Snake', 'Flappy': 'Flappy', 'TETRIS': 'Tetris',
+    'BallBlast': 'Ball Blast', 'BRICK_BLAST': 'Brick Blast', '2048': '2048',
+    'PACMAN': 'Pac-Man', 'CODEBREAKER': 'Codebreaker', 'CRYPTO': 'Crypto Tycoon',
 };
 const lbTabs = el('lbTabs');
 const lbContent = el('leaderboardContent');
@@ -151,7 +151,7 @@ async function loadLeaderboard() {
 }
 
 function buildLbTabs() {
-    const tabs = [{ key: '__global__', label: '🌍 Global' }].concat(
+    const tabs = [{ key: '__global__', label: 'Global' }].concat(
         (lbData ? lbData.games : []).map(g => ({ key: g, label: gameLabel(g) }))
     );
     lbTabs.innerHTML = tabs.map(t =>
@@ -164,13 +164,19 @@ function buildLbTabs() {
     });
 }
 
-const medal = i => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : String(i + 1);
+const medal = i => {
+    if (i < 3) {
+        const c = ['#FFC24B', '#C9D1D9', '#E8A063'][i];
+        return `<span class="lb-medal" style="background:${c}">${i + 1}</span>`;
+    }
+    return String(i + 1);
+};
 
 function lbRow(item, i, scoreKey) {
     const isMe = currentUser && item.identity === currentUser.uid;
     const avatar = item.avatar
         ? `<img class="lb-avatar" src="${avatarUrl(item.avatar, 40)}" alt="">`
-        : `<span class="lb-avatar ghost">👤</span>`;
+        : `<span class="lb-avatar ghost"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>`;
     const you = isMe ? '<em class="lb-you">toi</em>' : '';
     return `<div class="lb-row${isMe ? ' me' : ''}${i < 3 ? ' top' : ''}">
         <span class="lb-rank">${medal(i)}</span>
@@ -217,7 +223,7 @@ if (fsBtn) {
                 (document.exitFullscreen || document.webkitExitFullscreen).call(document);
             }
         };
-        const sync = () => { fsBtn.textContent = isFs() ? '🗕' : '⛶'; fsBtn.title = isFs() ? 'Quitter le plein écran' : 'Plein écran'; };
+        const sync = () => { fsBtn.title = isFs() ? 'Quitter le plein écran' : 'Plein écran'; };
         document.addEventListener('fullscreenchange', sync);
         document.addEventListener('webkitfullscreenchange', sync);
     }
@@ -301,7 +307,9 @@ confirmBtn.onclick = async () => {
 el('togglePw').onclick = () => {
     const show = passwordInput.type === 'password';
     passwordInput.type = show ? 'text' : 'password';
-    el('togglePw').textContent = show ? '🙈' : '👁';
+    el('togglePw').innerHTML = show
+        ? '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+        : '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
     el('togglePw').setAttribute('aria-label', show ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
 };
 
@@ -661,7 +669,7 @@ function renderGames() {
                     </div>
                 </div>
                 <div class="game-card__tags">${g.tags.map(t => `<span>${t}</span>`).join('')}</div>
-                <button class="game-card__play${i === 0 ? ' primary' : ''}" data-url="${g.url}">▶ Jouer</button>
+                <button class="game-card__play${i === 0 ? ' primary' : ''}" data-url="${g.url}"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" style="flex-shrink:0"><path d="M8 5v14l11-7z"/></svg> Jouer</button>
             </div>
         </article>`).join('');
     grid.querySelectorAll('.game-card__play').forEach(b => {
