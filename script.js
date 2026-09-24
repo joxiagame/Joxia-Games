@@ -645,7 +645,7 @@ const GAMES = [
     { name: 'Brick Blast Joxia', image: 'Brick Blast.png',    tags: ['Arcade', 'Casse-briques'], url: 'https://joxiagame.github.io/Breakout-Joxia/', isNew: true },
     { name: '2048 Joxia',        image: '2048.png',           tags: ['Puzzle', 'Chiffres'],    url: 'https://joxiagame.github.io/2048-joxia/', isNew: true },
     { name: 'Pac-Man Joxia',     image: 'Pac-Man.png',        tags: ['Arcade', 'Labyrinthe'],  url: 'https://joxiagame.github.io/Pacman-Joxia/', isNew: true },
-    { name: 'Codebreaker Joxia', image: 'Codebreaker.png',    tags: ['Puzzle', 'Décodage'],    url: 'https://joxiagame.github.io/Codebreaker-Joxia/', isNew: true },
+    { name: 'Codebreaker Joxia', image: 'Codebreaker.webp',   tags: ['Puzzle', 'Décodage'],    url: 'https://joxiagame.github.io/Codebreaker-Joxia/', isNew: true },
     { name: 'Crypto Tycoon Joxia', image: 'Crypto Tycoon.png', tags: ['Stratégie', 'Trading'], url: 'https://joxiagame.github.io/Crypto-Tycoon-Joxia/', isNew: true },
 ];
 
