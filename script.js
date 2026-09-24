@@ -716,7 +716,7 @@ const navActions = {
     games: () => { const g = el('games'); if (g) g.scrollIntoView({ behavior: 'smooth' }); },
     leaderboard: () => { openModal('leaderboardModal'); lbActive = '__global__'; buildLbTabs(); loadLeaderboard(); },
     friends: () => openModal('friendsModal'),
-    messages: () => alert('💬 Les messages arrivent bientôt !'),
+    messages: () => alert('Les messages arrivent bientôt !'),
     settings: () => openModal('settingsModal'),
 };
 document.querySelectorAll('.nav-item').forEach(btn => {
@@ -744,7 +744,7 @@ el('soundToggle').onchange = (e) => { try { localStorage.setItem('joxia-sound', 
 function doLogout() { signOut(auth); }
 function doDelete() {
     const user = auth.currentUser;
-    if (!user || !confirm('⚠️ SUPPRIMER DÉFINITIVEMENT TON COMPTE ?')) return;
+    if (!user || !confirm('SUPPRIMER DÉFINITIVEMENT TON COMPTE ?')) return;
     deleteUser(user).then(() => {
         const uname = (user.email.split('@')[0]).toLowerCase();
         remove(ref(db, `users/${user.uid}`)).catch(() => {});
@@ -782,3 +782,20 @@ onAuthStateChanged(auth, async (user) => {
         renderUserButton();
     }
 });
+
+/* ================= NOTIF DISCORD (relance douce, 1× par semaine) ================= */
+const discordToast = el('discordToast');
+if (discordToast) {
+    const DISCORD_TOAST_KEY = 'joxia-discord-toast-dismissed';
+    const WEEK = 7 * 24 * 60 * 60 * 1000;
+    const closeToast = () => discordToast.classList.remove('show');
+    discordToast.querySelector('.discord-toast__close').onclick = () => {
+        try { localStorage.setItem(DISCORD_TOAST_KEY, String(Date.now())); } catch (e) {}
+        closeToast();
+    };
+    let lastDismiss = 0;
+    try { lastDismiss = parseInt(localStorage.getItem(DISCORD_TOAST_KEY), 10) || 0; } catch (e) {}
+    if (Date.now() - lastDismiss > WEEK) {
+        setTimeout(() => discordToast.classList.add('show'), 3500);
+    }
+}

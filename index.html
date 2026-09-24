@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=9">
+    <link rel="stylesheet" href="style.css?v=10">
 </head>
 <body>
 
@@ -181,6 +181,25 @@
             </div>
         </section>
 
+        <!-- Rejoins le Discord -->
+        <section class="section" id="discordCta">
+            <div class="discord-cta">
+                <div class="discord-cta__brand">
+                    <span class="discord-cta__logo">
+                        <svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor"><path d="M20.3 4.4A19.8 19.8 0 0 0 15.9 3l-.2.4a16 16 0 0 1 4.3 2.1 13.6 13.6 0 0 0-12 0A16 16 0 0 1 8.3 3.4L8.1 3a19.8 19.8 0 0 0-4.4 1.4C.9 8.6.3 12.6.6 16.6A20 20 0 0 0 6.7 19l.5-.8a12 12 0 0 1-1.9-.9l.5-.4a14.2 14.2 0 0 0 12.4 0l.5.4a12 12 0 0 1-1.9.9l.5.8a20 20 0 0 0 6.1-2.4c.4-4.6-.6-8.6-2.6-12.2ZM8.7 14.2c-1.2 0-2.1-1-2.1-2.3s.9-2.3 2.1-2.3 2.1 1 2.1 2.3-.9 2.3-2.1 2.3Zm6.6 0c-1.2 0-2.1-1-2.1-2.3s.9-2.3 2.1-2.3 2.1 1 2.1 2.3-.9 2.3-2.1 2.3Z"/></svg>
+                    </span>
+                    <div>
+                        <h2>Rejoins la communauté JOXIA</h2>
+                        <p>Discute, propose des jeux et reste au courant des nouveautés sur notre Discord.</p>
+                    </div>
+                </div>
+                <a class="discord-btn" href="https://discord.gg/BNY6xprSen" target="_blank" rel="noopener">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20.3 4.4A19.8 19.8 0 0 0 15.9 3l-.2.4a16 16 0 0 1 4.3 2.1 13.6 13.6 0 0 0-12 0A16 16 0 0 1 8.3 3.4L8.1 3a19.8 19.8 0 0 0-4.4 1.4C.9 8.6.3 12.6.6 16.6A20 20 0 0 0 6.7 19l.5-.8a12 12 0 0 1-1.9-.9l.5-.4a14.2 14.2 0 0 0 12.4 0l.5.4a12 12 0 0 1-1.9.9l.5.8a20 20 0 0 0 6.1-2.4c.4-4.6-.6-8.6-2.6-12.2ZM8.7 14.2c-1.2 0-2.1-1-2.1-2.3s.9-2.3 2.1-2.3 2.1 1 2.1 2.3-.9 2.3-2.1 2.3Zm6.6 0c-1.2 0-2.1-1-2.1-2.3s.9-2.3 2.1-2.3 2.1 1 2.1 2.3-.9 2.3-2.1 2.3Z"/></svg>
+                    Rejoindre le Discord
+                </a>
+            </div>
+        </section>
+
         <footer class="footer">
             © 2026 <b>JOXIA Games</b> — fait avec <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="vertical-align:-1px"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg> &nbsp;•&nbsp; <a href="https://discord.gg/BNY6xprSen" target="_blank">Rejoindre le Discord</a>
         </footer>
@@ -292,6 +311,18 @@
         </div>
     </div>
 
-    <script type="module" src="script.js?v=9"></script>
+    <div class="discord-toast" id="discordToast" role="dialog" aria-live="polite" aria-label="Invitation Discord">
+        <span class="discord-toast__icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M20.3 4.4A19.8 19.8 0 0 0 15.9 3l-.2.4a16 16 0 0 1 4.3 2.1 13.6 13.6 0 0 0-12 0A16 16 0 0 1 8.3 3.4L8.1 3a19.8 19.8 0 0 0-4.4 1.4C.9 8.6.3 12.6.6 16.6A20 20 0 0 0 6.7 19l.5-.8a12 12 0 0 1-1.9-.9l.5-.4a14.2 14.2 0 0 0 12.4 0l.5.4a12 12 0 0 1-1.9.9l.5.8a20 20 0 0 0 6.1-2.4c.4-4.6-.6-8.6-2.6-12.2ZM8.7 14.2c-1.2 0-2.1-1-2.1-2.3s.9-2.3 2.1-2.3 2.1 1 2.1 2.3-.9 2.3-2.1 2.3Zm6.6 0c-1.2 0-2.1-1-2.1-2.3s.9-2.3 2.1-2.3 2.1 1 2.1 2.3-.9 2.3-2.1 2.3Z"/></svg>
+        </span>
+        <div class="discord-toast__txt">
+            <b>Rejoins-nous sur Discord !</b>
+            <span>Nouveautés, défis et communauté</span>
+        </div>
+        <a class="discord-toast__btn" href="https://discord.gg/BNY6xprSen" target="_blank" rel="noopener">Rejoindre</a>
+        <button class="discord-toast__close" aria-label="Fermer">&times;</button>
+    </div>
+
+    <script type="module" src="script.js?v=10"></script>
 </body>
 </html>

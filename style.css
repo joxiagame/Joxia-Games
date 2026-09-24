@@ -418,6 +418,61 @@ button,a,input,.avatar-opt,.color-opt{outline:none;}
 .benefit-ico svg{display:block;}
 .lb-medal{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-size:.72rem;font-weight:800;line-height:1;color:#20180F;}
 
+/* ---- CTA Discord + notif ---- */
+.discord-cta{
+    display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;
+    background:linear-gradient(120deg,#5865F2,#404EED);
+    border-radius:20px;padding:28px 32px;color:#fff;
+    box-shadow:0 12px 32px rgba(88,101,242,.28);
+    border:1px solid rgba(255,255,255,.12);
+}
+.discord-cta__brand{display:flex;align-items:center;gap:16px;min-width:0;flex:1 1 360px;}
+.discord-cta__logo{
+    width:56px;height:56px;border-radius:16px;display:grid;place-items:center;flex-shrink:0;
+    background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.18);
+}
+.discord-cta h2{font-family:'Plus Jakarta Sans',var(--font);font-size:1.35rem;font-weight:800;letter-spacing:-.3px;line-height:1.15;}
+.discord-cta p{color:rgba(255,255,255,.85);font-size:.92rem;margin-top:5px;max-width:480px;}
+.discord-btn{
+    display:inline-flex;align-items:center;gap:10px;height:52px;padding:0 26px;border-radius:14px;
+    background:#fff;color:#404EED;font-weight:800;font-size:1rem;letter-spacing:.2px;text-decoration:none;
+    box-shadow:0 8px 20px rgba(0,0,0,.18);transition:.18s var(--ease);flex-shrink:0;
+}
+.discord-btn:hover{transform:translateY(-2px);box-shadow:0 14px 28px rgba(0,0,0,.26);}
+.discord-btn:active{transform:scale(.97);}
+
+.discord-toast{
+    position:fixed;right:20px;bottom:20px;z-index:220;
+    display:flex;align-items:center;gap:14px;max-width:400px;width:calc(100% - 40px);
+    padding:14px 14px 14px 16px;border-radius:16px;
+    background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-lg);
+    transform:translateY(150%);opacity:0;
+    transition:transform .45s var(--ease),opacity .45s var(--ease);
+}
+.discord-toast.show{transform:translateY(0);opacity:1;}
+.discord-toast__icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:#5865F2;color:#fff;flex-shrink:0;}
+.discord-toast__txt{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1;}
+.discord-toast__txt b{font-size:.92rem;font-weight:700;color:var(--text);}
+.discord-toast__txt span{font-size:.8rem;color:var(--text-2);}
+.discord-toast__btn{
+    flex-shrink:0;height:38px;padding:0 16px;border-radius:10px;
+    background:#5865F2;color:#fff;font-weight:700;font-size:.85rem;
+    display:inline-flex;align-items:center;text-decoration:none;transition:.15s var(--ease);
+}
+.discord-toast__btn:hover{background:#4752C4;}
+.discord-toast__close{
+    flex-shrink:0;width:28px;height:28px;border:none;border-radius:8px;
+    background:transparent;color:var(--text-3);font-size:1.2rem;line-height:1;cursor:pointer;
+    display:grid;place-items:center;
+}
+.discord-toast__close:hover{background:var(--hover);color:var(--text);}
+
+@media (max-width:600px){
+    .discord-cta{padding:22px 20px;}
+    .discord-btn{width:100%;justify-content:center;}
+    .discord-toast{right:12px;bottom:12px;width:calc(100% - 24px);}
+}
+
 /* --- Avatar --- */
 .avatar-preview{display:flex;justify-content:center;margin-bottom:4px;}
 .avatar-preview img{width:112px;height:112px;border-radius:26px;background:var(--surface-2);border:2px solid var(--border);}
