@@ -79,7 +79,7 @@ window.searchGame = function() {
 
 /* ================= CLASSEMENT (global + par jeu) ================= */
 const GAME_LABELS = {
-    'Snake': 'Snake', 'Flappy': 'Flappy', 'TETRIS': 'Tetris',
+    'Snake': 'Snake', 'Flappy': 'Flappy', 'FLAPPY_BIRD': 'Flappy', 'TETRIS': 'Tetris',
     'BallBlast': 'Ball Blast', 'BRICK_BLAST': 'Brick Blast', '2048': '2048',
     'PACMAN': 'Pac-Man', 'CODEBREAKER': 'Codebreaker', 'CRYPTO': 'Crypto Tycoon',
     'POOL': 'Billard',
