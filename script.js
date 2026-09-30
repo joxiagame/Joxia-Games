@@ -963,19 +963,44 @@ function doLogout() { signOut(auth); }
 async function doDelete() {
     const user = auth.currentUser;
     if (!user || !confirm('SUPPRIMER DÉFINITIVEMENT TON COMPTE ?')) return;
-    // Les données sont effacées AVANT le compte : les règles exigent d'être encore connecté.
+    // Firebase n'autorise la suppression qu'après une connexion récente (~5 min).
+    // On le vérifie AVANT d'effacer quoi que ce soit : sinon les données partent
+    // mais le compte reste, ou l'inverse (fiche orpheline dans la base).
+    const lastLogin = Date.parse(user.metadata.lastSignInTime || '') || 0;
+    if (Date.now() - lastLogin > 4 * 60 * 1000) {
+        alert('Pour ta sécurité, reconnecte-toi puis relance la suppression dans les 4 minutes.');
+        return signOut(auth);
+    }
+    const uid = user.uid;
     const uname = (user.email.split('@')[0]).toLowerCase();
+    // 1) Couper la présence : sinon les onDisconnect réécrivent users/{uid}/lastSeen
+    //    après l'effacement et recréent une fiche fantôme.
+    if (presenceUnsub) { presenceUnsub(); presenceUnsub = null; }
+    detachListeners();
+    await Promise.all(['online', 'lastSeen'].map(k => onDisconnect(ref(db, `users/${uid}/${k}`)).cancel())
+        .concat(onDisconnect(ref(db, `presence/${uid}`)).cancel())).catch(() => {});
+    // 2) Effacer les données (les règles exigent d'être encore connecté).
+    //    Si le profil ne part pas, on n'efface pas le compte : pas de fiche orpheline.
+    try {
+        await Promise.all([
+            remove(ref(db, `users/${uid}`)),
+            remove(ref(db, `usernames/${uname}`)),
+        ]);
+    } catch (e) {
+        alert('Suppression impossible pour le moment. Réessaie.');
+        return location.reload();
+    }
     await Promise.all([
-        remove(ref(db, `users/${user.uid}`)),
-        remove(ref(db, `usernames/${uname}`)),
-        remove(ref(db, `friendRequests/${user.uid}`)),
-        remove(ref(db, `presence/${user.uid}`)),
+        remove(ref(db, `friendRequests/${uid}`)),
+        remove(ref(db, `presence/${uid}`)),
     ].map(p => p.catch(() => {})));
+    // 3) Supprimer le compte de connexion.
     try {
         await deleteUser(user);
         alert('Compte supprimé.');
     } catch (e) {
         alert('Action sensible : reconnecte-toi puis recommence la suppression.');
+        signOut(auth);
     }
 }
 el('logoutBtn2').onclick = doLogout;
