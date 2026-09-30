@@ -108,7 +108,7 @@ Chaque jeu tiers open-source **statique** vit dans **son propre repo** `joxiagam
 - Repo source : `canvas-vampire-survivors` (MIT). Roguelite « Vampire Survivors-like », 100 % HTML5 Canvas, **zéro dépendance**, modules ES (`<script type="module">`).
 - Structure poussée vers `joxiagame/survivor-joxia` : `index.html`, `styles.css`, `src/` (23 fichiers JS), `hero.svg`, `LICENSE`.
 - Corrections appliquées à `index.html` : suppression du `<link rel="manifest">` (PWA) + du script d'enregistrement du service worker, et chemins `./docs/hero.svg` / `./docs/og-card.svg` → `./hero.svg` (les `docs/` ne sont pas copiées).
-- ⚠️ i18n **anglais + chinois uniquement** (pas de français). Premier lancement : 2 overlays à fermer (`#howtoClose` puis `#tutorialOfferNo`).
+- i18n anglais + chinois d'origine, **français ajouté par Joxia** (langue par défaut). Premier lancement : 2 overlays à fermer (`#howtoClose` puis `#tutorialOfferNo`).
 - Sauvegarde locale (localStorage) → lien direct, pas de gate Firebase.
 
 ### Build Sandspiel (spécifique)
@@ -142,6 +142,11 @@ Les 10 jeux du lot 1 sont en français (`<html lang="fr">`, `<meta charset="utf-
 - **Tower Defense** : la police des titres n'a pas de majuscules accentuées → libellés sans accent (« Auteurs », « Un jeu de »).
 - Autres (HexGL, Hextris, Drakonas, Raging Gardens, Drunken Viking) : remplacements de chaînes exacts dans le HTML/JS. Drunken Viking : le titre « Touche       pour jouer » garde le trou centré sous l'image des flèches (police à chasse fixe).
 - Chaque `CREDITS.md` mentionne la traduction (modification sous GPL/MIT).
+
+### Traduction française (Shapez, Mindustry, Survivor)
+- **Shapez** : traductions compressées (LZString, alphabet perso `A–Z a–z 0–9 + - $`, fonction `decompressX64`) dans `bundle.js`. Méthode : décompresser le module FR (`JSON.parse(r(13).decompressX64("…"))`, repérable par `mainMenu.play === "Jouer"`) avec `lz-string` (`_decompress(len, 32, …)` / `_compress(str, 6, …)`), compléter les clés restées en anglais, recompresser (vérifier l'aller-retour), réinjecter. `autoDetectLanguageId()` renvoie `"fr"`. Textes codés en dur (« Se connecter », « Jouer à shapez sur Steam ») et écran de chargement de `index.html` traduits. ⚠️ **Recalculer `bundleIntegrity`** (`openssl dgst -sha256 -binary bundle.js | base64`) après toute modification de `bundle.js`, sinon blocage sur « Téléchargement du jeu ».
+- **Mindustry** : `assets/bundles/bundle_fr.properties` existe → `game.html` écrit `io.anuke.moment:locales = "fr"` dans le localStorage (préférences libGDX, suffixe `s` = chaîne) si absent. 38 clés restées en anglais traduites + clé **`play`** ajoutée (bouton « Jouer » du menu, absente de toutes les langues). ⚠️ **Mettre à jour la taille** du fichier dans `assets/assets.txt` (préchargeur GWT). Lanceur `index.html` traduit.
+- **Survivor** : langue `fr` ajoutée à `src/i18n.js` (défaut ; les anciennes sauvegardes « en » basculent une fois via `settings.joxiaFr`), données traduites en place (`data.js`, `stages.js`, `tutorial.js`…), touches **Z/Q** ajoutées (AZERTY).
 
 ## Administration & sécurité (Firebase)
 
