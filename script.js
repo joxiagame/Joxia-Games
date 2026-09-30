@@ -804,7 +804,13 @@ async function sendMessage() {
     const msg = Object.assign({}, s, { text, ts: Date.now() });
 
     if (chatThread.type === 'global') {
-        await push(ref(db, 'globalChat/messages'), msg);
+        try {
+            await push(ref(db, 'globalChat/messages'), msg);
+        } catch (e) {
+            const ban = await get(ref(db, `banned/${currentUser.uid}`)).catch(() => null);
+            alert(ban && ban.exists() ? 'Tu as été banni du chat par un administrateur.' : 'Message non envoyé. Réessaie.');
+            return;
+        }
     } else {
         const cid = chatThread.convId;
         const otherUid = chatThread.otherUid;
@@ -954,16 +960,23 @@ el('darkToggle').onchange = (e) => applyTheme(e.target.checked ? 'dark' : 'light
 el('soundToggle').onchange = (e) => { try { localStorage.setItem('joxia-sound', e.target.checked ? 'on' : 'off'); } catch (err) {} };
 
 function doLogout() { signOut(auth); }
-function doDelete() {
+async function doDelete() {
     const user = auth.currentUser;
     if (!user || !confirm('SUPPRIMER DÉFINITIVEMENT TON COMPTE ?')) return;
-    deleteUser(user).then(() => {
-        const uname = (user.email.split('@')[0]).toLowerCase();
-        remove(ref(db, `users/${user.uid}`)).catch(() => {});
-        remove(ref(db, `usernames/${uname}`)).catch(() => {});
-        remove(ref(db, `friendRequests/${user.uid}`)).catch(() => {});
+    // Les données sont effacées AVANT le compte : les règles exigent d'être encore connecté.
+    const uname = (user.email.split('@')[0]).toLowerCase();
+    await Promise.all([
+        remove(ref(db, `users/${user.uid}`)),
+        remove(ref(db, `usernames/${uname}`)),
+        remove(ref(db, `friendRequests/${user.uid}`)),
+        remove(ref(db, `presence/${user.uid}`)),
+    ].map(p => p.catch(() => {})));
+    try {
+        await deleteUser(user);
         alert('Compte supprimé.');
-    }).catch(() => alert('Action sensible : reconnecte-toi avant.'));
+    } catch (e) {
+        alert('Action sensible : reconnecte-toi puis recommence la suppression.');
+    }
 }
 el('logoutBtn2').onclick = doLogout;
 el('deleteAccountBtn2').onclick = doDelete;

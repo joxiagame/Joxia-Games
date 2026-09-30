@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Joxia · Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin.css?v=1">
+</head>
+<body>
+
+<!-- ===== Connexion ===== -->
+<main id="loginView" class="center-view hidden">
+    <form class="auth-card" id="loginForm" autocomplete="on">
+        <div class="brand"><span class="brand__logo">J</span><div><strong>Joxia</strong><span>Espace administrateur</span></div></div>
+        <label>Pseudo<input id="loginPseudo" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
+        <label>Mot de passe<input id="loginPass" type="password" autocomplete="current-password" required></label>
+        <p class="form-msg" id="loginMsg" role="alert"></p>
+        <button class="btn btn--primary btn--block" type="submit" id="loginBtn">Se connecter</button>
+        <a class="muted-link" href="../">← Retour au hub</a>
+    </form>
+</main>
+
+<!-- ===== Accès refusé ===== -->
+<main id="deniedView" class="center-view hidden">
+    <div class="auth-card">
+        <div class="denied-ico">⛔</div>
+        <h1>Accès refusé</h1>
+        <p class="muted">Le compte <b id="deniedName"></b> n'a pas les droits administrateur.</p>
+        <button class="btn btn--ghost btn--block" id="deniedLogout">Changer de compte</button>
+        <a class="muted-link" href="../">← Retour au hub</a>
+    </div>
+</main>
+
+<!-- ===== Chargement ===== -->
+<main id="loadingView" class="center-view"><div class="spinner" aria-label="Chargement"></div></main>
+
+<!-- ===== Application ===== -->
+<div id="app" class="hidden">
+    <header class="topbar">
+        <div class="brand"><span class="brand__logo">J</span><div><strong>Joxia Admin</strong><span id="adminName"></span></div></div>
+        <div class="topbar__actions">
+            <a class="btn btn--ghost btn--sm" href="../">↩ Hub</a>
+            <button class="btn btn--ghost btn--sm" id="logoutBtn">Déconnexion</button>
+        </div>
+    </header>
+
+    <nav class="tabs" role="tablist">
+        <button class="tab active" data-tab="dash" role="tab">Tableau de bord</button>
+        <button class="tab" data-tab="chat" role="tab">Chat <span class="pill" id="chatCount">0</span></button>
+        <button class="tab" data-tab="accounts" role="tab">Comptes <span class="pill" id="accCount">0</span></button>
+    </nav>
+
+    <!-- Tableau de bord -->
+    <section class="panel" id="tab-dash">
+        <div class="stats" id="stats"></div>
+        <div class="grid-2">
+            <div class="card">
+                <h2>Connectés maintenant</h2>
+                <ul class="mini-list" id="onlineList"></ul>
+            </div>
+            <div class="card">
+                <h2>Dernières inscriptions</h2>
+                <ul class="mini-list" id="recentList"></ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modération du chat -->
+    <section class="panel hidden" id="tab-chat">
+        <div class="toolbar">
+            <input type="search" id="chatSearch" placeholder="Filtrer par pseudo ou texte…">
+            <span class="muted small" id="chatInfo"></span>
+        </div>
+        <ul class="msg-list" id="msgList"></ul>
+    </section>
+
+    <!-- Comptes -->
+    <section class="panel hidden" id="tab-accounts">
+        <div class="toolbar">
+            <input type="search" id="accSearch" placeholder="Rechercher un pseudo…">
+            <select id="accSort" aria-label="Trier">
+                <option value="lastSeen">Dernière activité</option>
+                <option value="created">Inscription récente</option>
+                <option value="score">Meilleur score total</option>
+                <option value="name">Pseudo (A→Z)</option>
+            </select>
+        </div>
+        <ul class="acc-list" id="accList"></ul>
+    </section>
+</div>
+
+<!-- Fiche compte -->
+<div class="drawer-backdrop hidden" id="drawerBackdrop"></div>
+<aside class="drawer hidden" id="drawer" aria-modal="true" role="dialog"></aside>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script type="module" src="admin.js?v=1"></script>
+</body>
+</html>
