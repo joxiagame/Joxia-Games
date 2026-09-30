@@ -133,6 +133,16 @@ Chaque jeu tiers open-source **statique** vit dans **son propre repo** `joxiagam
 - **Lots de 10** (`docs/leereilly-games/LOTS.md`, colonnes `lot`/`potentiel`/`test_navigateur` du CSV) : les 49 jeux ✅ ont été testés dans Chromium ; 40 retenus en 4 lots (1 = plus fort potentiel, 4 = à corriger ou doublons), 9 reclassés (build requis, Unity Web Player, serveur, pas un jeu). Import : `--lot N --apply`.
 - **Publication réelle** (session sans droit de fork) : l'utilisateur crée les dépôts **vides** `joxiagame/<slug>` (publics) ; Claude y pousse 2 commits — import à l'identique des fichiers suivis du dépôt d'origine (message = dépôt@commit + licence), puis ajouts Joxia (mêmes fonctions que le script) — sur `main` et `gh-pages`. Pages à activer (Settings → Pages → main /). Miniature = capture du test (640×400). **Lot 1 publié** (cartes dans « Découvre aussi »).
 
+### Traduction française (lot 1 leereilly)
+Les 10 jeux du lot 1 sont en français (`<html lang="fr">`, `<meta charset="utf-8">`), méthode par jeu :
+- **A Dark Room** : i18n intégrée → `fr` par défaut dans `index.html` + chaînes manquantes ajoutées à `lang/fr/strings.js` (seuls les noms de marques restent en anglais).
+- **3d.city** : code compilé + mots servant de clés internes (« Fire », « Budget ») → **traduction à l'affichage** par `joxia-fr.js` (dictionnaire + regex, `MutationObserver` sur les nœuds texte et `title`), sans toucher au code du jeu.
+- **Particle Clicker** : `json/*.json` (noms, descriptions, effets ; 121 succès traduits par modèle), `html/*.html` (pages de physique), `index.html` (AngularJS) et messages JS.
+- **Pond** : `assets/enter.png` redessiné (« Entrer », police Leckerli One fournie, double contour identique).
+- **Tower Defense** : la police des titres n'a pas de majuscules accentuées → libellés sans accent (« Auteurs », « Un jeu de »).
+- Autres (HexGL, Hextris, Drakonas, Raging Gardens, Drunken Viking) : remplacements de chaînes exacts dans le HTML/JS. Drunken Viking : le titre « Touche       pour jouer » garde le trou centré sous l'image des flèches (police à chasse fixe).
+- Chaque `CREDITS.md` mentionne la traduction (modification sous GPL/MIT).
+
 ## Administration & sécurité (Firebase)
 
 - **Panneau admin** : `admin/` → https://joxiagame.github.io/Joxia-Games/admin/ (non indexé). Connexion avec un compte Joxia ; accès si `admins/{uid} === true`. Fonctions : modération du chat global (supprimer, bannir/débannir, purger les messages d'un joueur), suivi des comptes (statut en ligne, dernière activité, inscription, amis, meilleurs scores). Les **messages privés** (`chats/`) restent inaccessibles aux admins (confidentialité).
