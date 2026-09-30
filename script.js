@@ -937,11 +937,11 @@ const navActions = {
     messages: () => openChat(),
     settings: () => openModal('settingsModal'),
 };
-document.querySelectorAll('.nav-item').forEach(btn => {
+document.querySelectorAll('.nav-item[data-nav]').forEach(btn => {
     const key = btn.dataset.nav;
     const action = navActions[key];
     btn.onclick = () => {
-        document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b === btn));
+        document.querySelectorAll('.nav-item[data-nav]').forEach(b => b.classList.toggle('active', b === btn));
         if (action) action();
     };
 });
@@ -1027,11 +1027,27 @@ function unwatchSuspension() {
     showSuspension(null);
 }
 
+/* ================= ACCÈS ADMIN (lien vers admin/) =================
+   Simple raccourci d'interface : les droits restent vérifiés côté
+   serveur par les règles Firebase (admins/{uid} === true). */
+let adminUnsub = null;
+function watchAdmin(uid) {
+    unwatchAdmin();
+    adminUnsub = onValue(ref(db, `admins/${uid}`),
+        snap => { el('navAdmin').style.display = snap.val() === true ? '' : 'none'; },
+        () => { el('navAdmin').style.display = 'none'; });
+}
+function unwatchAdmin() {
+    if (adminUnsub) { adminUnsub(); adminUnsub = null; }
+    el('navAdmin').style.display = 'none';
+}
+
 onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     if (user) {
         const username = user.email.split('@')[0];
         watchSuspension(user.uid);
+        watchAdmin(user.uid);
         await ensureProfile(user, username);
         setupPresence(user.uid);
         if (profileListener) { profileListener(); profileListener = null; }
@@ -1045,6 +1061,7 @@ onAuthStateChanged(auth, async (user) => {
     } else {
         profile = null;
         unwatchSuspension();
+        unwatchAdmin();
         detachListeners();
         renderUserButton();
     }
