@@ -21,7 +21,8 @@ Prérequis : git + GitHub CLI connecté (`gh auth login`) avec droits sur l'orga
 Exemples :
   python scripts/import_leereilly_games.py                     # aperçu (rien n'est modifié)
   python scripts/import_leereilly_games.py --only hextris-joxia --apply
-  python scripts/import_leereilly_games.py --apply --limit 5   # 5 premiers jeux ✅
+  python scripts/import_leereilly_games.py --lot 1 --apply     # lot 1 : les 10 jeux au plus fort potentiel
+  python scripts/import_leereilly_games.py --lots              # voir la composition des lots
   python scripts/import_leereilly_games.py --niveau build      # + jeux à compiler (fork seul, sans Pages)
 """
 import argparse
@@ -243,12 +244,28 @@ def main():
                     help="ok = jeux ✅ servables tels quels (défaut) ; build = + jeux à compiler ; nc = + licences non commerciales")
     ap.add_argument("--only", action="append", default=[], help="slug, dépôt ou nom (répétable)")
     ap.add_argument("--limit", type=int, default=0, help="nombre maximum de jeux")
+    ap.add_argument("--lot", type=int, default=0, help="n'importer qu'un lot de 10 (1 = plus fort potentiel, voir docs/leereilly-games/LOTS.md)")
+    ap.add_argument("--lots", action="store_true", help="afficher la composition des lots et quitter")
     ap.add_argument("--no-tracker", action="store_true", help="ne pas ajouter tracker.js")
     ap.add_argument("--workdir", default=os.path.join(tempfile.gettempdir(), "joxia-leereilly"))
     a = ap.parse_args()
 
     with open(CSV_PATH, encoding="utf-8") as f:
-        games = [g for g in csv.DictReader(f) if g["slug"] and g["eligibilite"] in LEVELS[a.niveau]]
+        rows = list(csv.DictReader(f))
+    if a.lots:
+        lots = {}
+        for g in rows:
+            if g.get("lot"):
+                lots.setdefault(int(g["lot"]), []).append(g)
+        for n in sorted(lots):
+            print(f"Lot {n} :")
+            for g in sorted(lots[n], key=lambda g: -int(g["potentiel"] or 0)):
+                print(f"   {g['potentiel']:>3}  {g['nom']}  ({g['slug']})")
+        return
+    if a.lot:  # un lot est une sélection validée : il prime sur --niveau
+        games = sorted([g for g in rows if g.get("lot") == str(a.lot)], key=lambda g: -int(g["potentiel"] or 0))
+    else:
+        games = [g for g in rows if g["slug"] and g["eligibilite"] in LEVELS[a.niveau]]
     if a.only:
         keys = {k.lower() for k in a.only}
         games = [g for g in games if {g["slug"].lower(), g["depot"].lower(), g["nom"].lower()} & keys]
