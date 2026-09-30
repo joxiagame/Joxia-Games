@@ -81,7 +81,7 @@ function show(view) {
 /* ---------------- état ---------------- */
 const state = {
     me: null, users: {}, presence: {}, banned: {}, suspensions: {}, admins: {}, games: {},
-    playing: {}, playtime: {}, messages: [],
+    playing: {}, playtime: {}, usernames: null, messages: [],
     tab: 'dash', chatFilter: '', accSearch: '', accSort: 'lastSeen', accFilter: 'all', drawerUid: null,
 };
 let unsubs = [], clock = null;
@@ -90,6 +90,18 @@ const nameOf = uid => { const u = state.users[uid]; return u ? (u.displayName ||
 const usernameOf = uid => (state.users[uid] && state.users[uid].username) || '';
 const isOnline = uid => !!state.presence[uid];
 const isAdmin = uid => state.admins[uid] === true;
+// Fiche orpheline : profil users/{uid} sans compte de connexion derrière.
+// Le compte réel est celui vers lequel pointe l'index usernames/{pseudo} ;
+// une fiche sans pseudo, ou dont le pseudo pointe vers un autre uid, est un reste
+// (compte supprimé dont le profil a survécu, ou fiche recréée par onDisconnect).
+// Tant que l'index n'est pas chargé, on ne marque rien (sinon tout serait orphelin).
+const isOrphan = uid => {
+    if (!state.usernames || isAdmin(uid) || (state.me && uid === state.me.uid)) return false;
+    const pseudo = String((state.users[uid] || {}).username || '').toLowerCase();
+    // Pseudo absent de l'index : cas inconnu (vieux compte) → on ne touche à rien.
+    return !pseudo || (pseudo in state.usernames && state.usernames[pseudo] !== uid);
+};
+const realUids = () => Object.keys(state.users).filter(uid => !isOrphan(uid));
 const banOf = uid => { const b = state.banned[uid]; return b && (!b.until || b.until > Date.now()) ? b : null; };
 const suspOf = uid => { const s = state.suspensions[uid]; return s && s.until > Date.now() ? s : null; };
 const playingOf = uid => state.playing[uid] || null;
@@ -99,7 +111,7 @@ const msgCount = uid => state.messages.reduce((n, m) => n + (m.from === uid ? 1 
 // Meilleur score de l'utilisateur dans chaque jeu (les jeux enregistrent le pseudo).
 function scoresFor(uid) {
     const u = state.users[uid] || {};
-    const names = new Set([u.username, u.displayName].filter(Boolean).map(s => String(s).toLowerCase()));
+    const names = isOrphan(uid) ? new Set() : new Set([u.username, u.displayName].filter(Boolean).map(s => String(s).toLowerCase()));
     const byGame = {}; let total = 0;
     for (const [game, node] of Object.entries(state.games || {})) {
         const sc = node && node.scores; if (!sc) continue;
@@ -166,6 +178,8 @@ function attach() {
     watch('games', 'games');
     watch('playing', 'playing');
     watch('playtime', 'playtime');
+    unsubs.push(onValue(ref(db, 'usernames'), s => { state.usernames = s.val() || {}; renderAll(); },
+        () => { state.usernames = null; toast('Lecture refusée : usernames (détection des fiches orphelines désactivée)', true); }));
     unsubs.push(onValue(query(ref(db, 'globalChat/messages'), limitToLast(CHAT_LIMIT)), s => {
         const arr = [];
         s.forEach(c => { arr.push(Object.assign({ id: c.key }, c.val())); });
@@ -179,7 +193,7 @@ function renderAll() {
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(() => {
         $('chatCount').textContent = state.messages.length;
-        $('accCount').textContent = Object.keys(state.users).length;
+        $('accCount').textContent = realUids().length;
         $('playCount').textContent = Object.keys(state.playing).length;
         if (state.tab === 'dash') renderDash();
         if (state.tab === 'games') renderGames();
@@ -205,6 +219,7 @@ $('accFilter').onchange = e => { state.accFilter = e.target.value; renderAccount
 function badges(uid) {
     const s = suspOf(uid), b = banOf(uid);
     return (isAdmin(uid) ? '<span class="badge admin">ADMIN</span>' : '')
+        + (isOrphan(uid) ? '<span class="badge orphan" title="Profil sans compte de connexion (reste d\'un compte supprimé)">ORPHELIN</span>' : '')
         + (s ? '<span class="badge susp">SUSPENDU</span>' : '')
         + (b ? '<span class="badge ban">BANNI DU SALON</span>' : '');
 }
@@ -226,7 +241,8 @@ function openRow(e) { const li = e.target.closest('li[data-uid]'); if (li) openD
 
 /* ---------------- tableau de bord ---------------- */
 function renderDash() {
-    const uids = Object.keys(state.users);
+    const uids = realUids();
+    const orphans = Object.keys(state.users).length - uids.length;
     const online = Object.keys(state.presence).filter(k => state.presence[k]);
     const totalPlay = Object.values(state.playtime).reduce((n, p) => n + (Number(p && p.total) || 0), 0);
     const suspended = Object.keys(state.suspensions).filter(suspOf).length;
@@ -238,6 +254,7 @@ function renderDash() {
         ['', fmtDur(totalPlay), 'Temps de jeu cumulé'],
         ['bad', suspended, 'Comptes suspendus'],
         ['bad', banned, 'Bannis du salon'],
+        ...(orphans ? [['', orphans, 'Fiches orphelines']] : []),
     ].map(([cls, n, label]) => `<div class="stat ${cls}"><b>${n}</b><span>${label}</span></div>`).join('');
 
     $('onlineList').innerHTML = online.length
@@ -305,8 +322,8 @@ function renderChat() {
 function renderAccounts() {
     const q = state.accSearch.trim().toLowerCase();
     const filters = {
-        all: () => true, online: uid => isOnline(uid), playing: uid => !!playingOf(uid),
-        suspended: uid => !!suspOf(uid), banned: uid => !!banOf(uid),
+        all: uid => !isOrphan(uid), online: uid => isOnline(uid), playing: uid => !!playingOf(uid),
+        suspended: uid => !!suspOf(uid), banned: uid => !!banOf(uid), orphan: uid => isOrphan(uid),
     };
     const keep = filters[state.accFilter] || filters.all;
     let list = Object.keys(state.users).filter(keep).map(uid => ({ uid, u: state.users[uid], sc: scoresFor(uid), pt: Number(ptOf(uid).total) || 0 }))
@@ -319,8 +336,12 @@ function renderAccounts() {
         name: (a, b) => nameOf(a.uid).localeCompare(nameOf(b.uid), 'fr'),
     };
     list.sort(sorters[state.accSort] || sorters.lastSeen);
+    const nOrphans = Object.keys(state.users).filter(isOrphan).length;
+    $('orphanBar').classList.toggle('hidden', !nOrphans);
+    $('orphanInfo').textContent = `${nOrphans} fiche(s) orpheline(s) : profils restés dans la base après la suppression d'un compte.`
+        + (state.accFilter === 'orphan' ? '' : ' Filtre « Fiches orphelines » pour les voir.');
     $('accList').innerHTML = list.length ? list.map(({ uid, u, sc, pt }) => `
-        <li class="acc" data-uid="${esc(uid)}">
+        <li class="acc${isOrphan(uid) ? ' is-orphan' : ''}" data-uid="${esc(uid)}">
             <img class="av" src="${avatarUrl(u.avatar, 48)}" alt="" loading="lazy">
             <div class="who">
                 <b>${esc(nameOf(uid))}${badges(uid)}</b>
@@ -396,6 +417,8 @@ function renderDrawer(uid) {
 
         <div class="section-title">Actions</div>
         <div class="actions">
+            ${isOrphan(uid) ? `<p class="muted small">Cette fiche n'a plus de compte de connexion${pseudo ? ` : le vrai compte @${esc(pseudo)} est une autre fiche` : ''}. Elle peut être supprimée sans risque.</p>
+            <button class="btn btn--danger" data-action="purgeOrphan" data-uid="${esc(uid)}">🧹 Supprimer cette fiche orpheline</button>` : ''}
             ${protectedAcc ? '<p class="muted small">Sanctions indisponibles sur un compte administrateur.</p>' : `
             ${s ? `<button class="btn btn--ghost" data-action="unsuspend" data-uid="${esc(uid)}">▶ Lever la suspension</button>`
                 : `<button class="btn btn--danger" data-action="suspend" data-uid="${esc(uid)}">⏸ Suspendre le compte…</button>`}
@@ -481,6 +504,8 @@ document.addEventListener('click', async e => {
     if (action === 'unban') return lift('banned', uid, `${nameOf(uid)} est débanni du salon`);
     if (action === 'unsuspend') return lift('suspensions', uid, `Suspension de ${nameOf(uid)} levée`);
     if (action === 'purge') return purgeMessages(uid);
+    if (action === 'purgeOrphan') return purgeOrphans([uid]);
+    if (action === 'purgeOrphans') return purgeOrphans(Object.keys(state.users).filter(isOrphan));
     if (action === 'copy') {
         try { await navigator.clipboard.writeText(b.dataset.text); toast('Commande copiée'); }
         catch (err) { toast('Copie impossible : sélectionne le texte', true); }
@@ -510,4 +535,21 @@ async function purgeMessages(uid) {
         await update(ref(db), updates);
         toast(`${n} message(s) supprimé(s)`);
     } catch (err) { toast('Action refusée par le serveur', true); }
+}
+
+// Supprime les restes d'un compte qui n'existe plus (profil, présence, temps de jeu).
+// Revérifie isOrphan au dernier moment : jamais un compte réel ni un admin.
+async function purgeOrphans(uids) {
+    uids = uids.filter(isOrphan);
+    if (!uids.length) return toast('Aucune fiche orpheline');
+    if (!confirm(`Supprimer ${uids.length} fiche(s) orpheline(s) ? Les comptes réels ne sont pas touchés.`)) return;
+    let ok = 0;
+    for (const uid of uids) {
+        const updates = {};
+        ['users', 'presence', 'playing', 'playtime'].forEach(n => { updates[`${n}/${uid}`] = null; });
+        try { await update(ref(db), updates); ok++; } catch (err) { /* refusé par les règles */ }
+    }
+    if (uids.includes(state.drawerUid)) closeDrawer();
+    if (ok === uids.length) toast(`${ok} fiche(s) orpheline(s) supprimée(s)`);
+    else toast(`${uids.length - ok} suppression(s) refusée(s) par le serveur : les règles doivent autoriser les admins à écrire dans users/, presence/, playing/ et playtime/`, true);
 }

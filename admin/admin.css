@@ -145,6 +145,10 @@ a{color:inherit}
 .note{margin-top:12px}
 .badge.susp{background:rgba(232,163,23,.16);color:#9A6A00}
 .badge.play{background:rgba(31,165,107,.12);color:var(--success)}
+.badge.orphan{background:rgba(120,120,120,.14);color:var(--text-2,#666)}
+.orphan-bar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+    margin-bottom:12px;padding:10px 12px;border:1px dashed var(--border);border-radius:var(--r-md)}
+.acc.is-orphan{opacity:.6}
 .bars{list-style:none;display:flex;flex-direction:column;gap:10px}
 .bars li{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-size:13.5px}
 .bars .bar{grid-column:1/-1;height:8px;border-radius:999px;background:var(--surface-2);overflow:hidden}

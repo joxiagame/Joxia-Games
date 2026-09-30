@@ -104,6 +104,7 @@
                 <option value="playing">En jeu</option>
                 <option value="suspended">Suspendus</option>
                 <option value="banned">Bannis du salon</option>
+                <option value="orphan">Fiches orphelines</option>
             </select>
             <select id="accSort" aria-label="Trier">
                 <option value="lastSeen">Dernière activité</option>
@@ -112,6 +113,10 @@
                 <option value="score">Meilleur score total</option>
                 <option value="name">Pseudo (A→Z)</option>
             </select>
+        </div>
+        <div class="orphan-bar hidden" id="orphanBar">
+            <span id="orphanInfo"></span>
+            <button class="btn btn--danger" data-action="purgeOrphans">🧹 Supprimer toutes les fiches orphelines</button>
         </div>
         <ul class="acc-list" id="accList"></ul>
     </section>
