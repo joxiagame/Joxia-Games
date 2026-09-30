@@ -131,6 +131,7 @@ Chaque jeu tiers open-source **statique** vit dans **son propre repo** `joxiagam
 - Après import : coller les cartes générées (`cartes-hub.html`) dans « Découvre aussi », ajouter `<slug sans -joxia>.png` et les entrées `PLAY_LABELS` affichées.
 - Slugs déjà pris chez joxiagame (2048, Snake, Flappy Bird) → suffixe `-oss-joxia`.
 - **Lots de 10** (`docs/leereilly-games/LOTS.md`, colonnes `lot`/`potentiel`/`test_navigateur` du CSV) : les 49 jeux ✅ ont été testés dans Chromium ; 40 retenus en 4 lots (1 = plus fort potentiel, 4 = à corriger ou doublons), 9 reclassés (build requis, Unity Web Player, serveur, pas un jeu). Import : `--lot N --apply`.
+- **Publication réelle** (session sans droit de fork) : l'utilisateur crée les dépôts **vides** `joxiagame/<slug>` (publics) ; Claude y pousse 2 commits — import à l'identique des fichiers suivis du dépôt d'origine (message = dépôt@commit + licence), puis ajouts Joxia (mêmes fonctions que le script) — sur `main` et `gh-pages`. Pages à activer (Settings → Pages → main /). Miniature = capture du test (640×400). **Lot 1 publié** (cartes dans « Découvre aussi »).
 
 ## Administration & sécurité (Firebase)
 
@@ -144,6 +145,6 @@ Chaque jeu tiers open-source **statique** vit dans **son propre repo** `joxiagam
   - ⚠️ `wipe-auth.js` supprime **tous** les comptes : ne jamais lancer sans `--dry`.
 - **Suivi du temps de jeu** : `tracker.js` (racine du hub). Chaque jeu l'inclut juste avant `</body>` :
   `<script type="module" src="https://joxiagame.github.io/Joxia-Games/tracker.js?game=<ID>"></script>`
-  (IDs : SNAKE, FLAPPY, TETRIS, BALLBLAST, BRICKBLAST, 2048, PACMAN, POOL, CODEBREAKER, CRYPTO, SHAPEZ, MINDUSTRY (dans `game.html`), SURVIVOR, SANDSPIEL, INFINITECRAFT). **Tout nouveau jeu doit l'ajouter** + son libellé dans `PLAY_LABELS` (`admin/admin.js`). Réutilise la session du hub (même domaine) ; ne compte que le temps onglet visible ; écrit `playing/{uid}` et `playtime/{uid}` ; affiche un écran de blocage si le compte est suspendu.
+  (IDs : SNAKE, FLAPPY, TETRIS, BALLBLAST, BRICKBLAST, 2048, PACMAN, POOL, CODEBREAKER, CRYPTO, SHAPEZ, MINDUSTRY (dans `game.html`), SURVIVOR, SANDSPIEL, INFINITECRAFT, + lot 1 leereilly : HEXGL, ADARKROOM, 3DCITY, TOWERDEFENSE, HEXTRIS, POND, DRAKONAS, RAGINGGARDENS, PARTICLECLICKER, DRUNKENVIKING). **Tout nouveau jeu doit l'ajouter** + son libellé dans `PLAY_LABELS` (`admin/admin.js`). Réutilise la session du hub (même domaine) ; ne compte que le temps onglet visible ; écrit `playing/{uid}` et `playtime/{uid}` ; affiche un écran de blocage si le compte est suspendu.
 - **Sanctions** : `suspensions/{uid}` (compte bloqué : hub + jeux + chat/MP/amis refusés par les règles) et `banned/{uid}` (salon seulement), avec `until` (timestamp ; `9999999999999` = définitif). Levée automatique à l'échéance.
 - **Suppression définitive** : `node delete-user.js <pseudo>` (aperçu) puis `--yes` (options `--keep-chat`, `--keep-scores`). Supprime compte de connexion + profil, amitiés, demandes, MP (des deux côtés), messages du salon, scores, temps de jeu.
