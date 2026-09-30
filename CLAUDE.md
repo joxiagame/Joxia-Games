@@ -123,6 +123,14 @@ Chaque jeu tiers open-source **statique** vit dans **son propre repo** `joxiagam
 - Volet promo « PullTab » (Discord + App Store payant de l'auteur) masqué via `#PullTab{display:none}` dans `index.html`.
 - ⚠️ Bouton « Upload » (partage) contacte le serveur de l'auteur (`a.sandspiel.club`) → échoue silencieusement hors-ligne. i18n **anglais uniquement**.
 
+### Catalogue leereilly/games (jeux open source de la communauté)
+- Source : `leereilly/games` (« Games on GitHub », liste archivée, **CC BY-NC-SA 4.0** → créditer, pas d'usage commercial, même licence pour la liste dérivée).
+- Inventaire : `docs/leereilly-games/inventaire.csv` (+ `README.md` lisible) — 400 entrées : dépôt, licence lue dans le `LICENSE` de chaque dépôt, langage, dossier servable (`pages_dir`), niveau d'intégration, `slug` du fork.
+- Niveaux : ✅ fork + Pages direct · ⚙️ build requis · ⚠️ Flash / non commercial / marque tierce · 🖥️ serveur · 📚 natif/moteur (lien seulement) · ❌ sans licence libre ou supprimé (ne jamais héberger).
+- Import : `python scripts/import_leereilly_games.py` (aperçu) puis `--apply` (`--only <slug>`, `--limit N`, `--niveau build|nc`). Fork `joxiagame/<slug>` (historique + LICENSE + assets conservés), ajoute `CREDITS.md`, bandeau README entre `<!-- joxia-credits -->`, `tracker.js`, `.nojekyll`, active Pages. Refuse de committer si un fichier de licence est touché ; relançable sans doublon.
+- Après import : coller les cartes générées (`cartes-hub.html`) dans « Découvre aussi », ajouter `<slug sans -joxia>.png` et les entrées `PLAY_LABELS` affichées.
+- Slugs déjà pris chez joxiagame (2048, Snake, Flappy Bird) → suffixe `-oss-joxia`.
+
 ## Administration & sécurité (Firebase)
 
 - **Panneau admin** : `admin/` → https://joxiagame.github.io/Joxia-Games/admin/ (non indexé). Connexion avec un compte Joxia ; accès si `admins/{uid} === true`. Fonctions : modération du chat global (supprimer, bannir/débannir, purger les messages d'un joueur), suivi des comptes (statut en ligne, dernière activité, inscription, amis, meilleurs scores). Les **messages privés** (`chats/`) restent inaccessibles aux admins (confidentialité).
