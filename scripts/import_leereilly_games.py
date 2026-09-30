@@ -10,6 +10,7 @@ Le script AJOUTE seulement :
   - CREDITS.md          : auteur, dépôt original, licence, liste leereilly/games ;
   - un bandeau de crédits en tête du README (entre marqueurs, idempotent) ;
   - le traceur de temps de jeu du hub (tracker.js) avant </body> (--no-tracker pour l'éviter) ;
+  - touch.js du hub dans le <head> : bouton « Quitter » + base tactile/mobile (manette à configurer par jeu) ;
 puis active GitHub Pages. Il ne modifie ni ne remplace JAMAIS un fichier de licence
 (vérifié avant chaque commit).
 
@@ -40,6 +41,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CSV_PATH = os.path.join(ROOT, "docs", "leereilly-games", "inventaire.csv")
 LIST_URL = "https://github.com/leereilly/games"
 TRACKER = '<script type="module" src="https://joxiagame.github.io/Joxia-Games/tracker.js?game={gid}"></script>'
+# Bouton « Quitter » + couche tactile/mobile du hub (options data-* à ajuster par jeu, voir touch.js)
+TOUCH = '<script src="https://joxiagame.github.io/Joxia-Games/touch.js" charset="utf-8" data-quit="tl"></script>'
 MARK_BEGIN, MARK_END = "<!-- joxia-credits -->", "<!-- /joxia-credits -->"
 LICENSE_RE = re.compile(r"(^|/)(licen[cs]e|copying|unlicense)[^/]*$", re.I)
 
@@ -100,7 +103,8 @@ Ce dépôt est un fork, hébergé sur GitHub Pages pour le hub Joxia Games
 (https://joxiagame.github.io/Joxia-Games/). Seuls ajouts :
 
 - ce fichier `CREDITS.md` et un bandeau de crédits en tête du README ;
-- le script de suivi du temps de jeu du hub (`tracker.js`) avant `</body>`, si présent.
+- le script de suivi du temps de jeu du hub (`tracker.js`) avant `</body>`, si présent ;
+- `touch.js` du hub dans le `<head>` de `index.html` : bouton « Quitter » vers le hub, commandes tactiles et adaptation à l'écran mobile.
 
 L'historique Git complet (commits des auteurs d'origine) est conservé.
 """
@@ -200,8 +204,10 @@ def add_credits(g, org, branch, workdir, tracker, apply):
             if "tracker.js?game=" not in html and re.search(r"</body>", html, re.I):
                 tag = TRACKER.format(gid=game_id(g["slug"]))
                 html = re.sub(r"</body>", tag + "\n</body>", html, count=1, flags=re.I)
-                with open(idx, "w", encoding="utf-8") as f:
-                    f.write(html)
+            if "Joxia-Games/touch.js" not in html and re.search(r"</head>", html, re.I):
+                html = re.sub(r"</head>", "  " + TOUCH + "\n</head>", html, count=1, flags=re.I)
+            with open(idx, "w", encoding="utf-8") as f:
+                f.write(html)
 
     # 4 bis) .nojekyll : sinon Pages (Jekyll) ignore les dossiers/fichiers commençant par « _ »
     if g["pages_dir"]:
