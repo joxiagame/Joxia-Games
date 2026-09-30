@@ -264,6 +264,9 @@ def main():
         return
     if a.lot:  # un lot est une sélection validée : il prime sur --niveau
         games = sorted([g for g in rows if g.get("lot") == str(a.lot)], key=lambda g: -int(g["potentiel"] or 0))
+        if a.lot == 4:
+            print("⚠️  Lot 4 : jeux à corriger avant mise en ligne ou doublons des jeux maison "
+                  "(colonne test_navigateur / LOTS.md). Utilise --only pour n'importer que ceux que tu as réparés.\n")
     else:
         games = [g for g in rows if g["slug"] and g["eligibilite"] in LEVELS[a.niveau]]
     if a.only:
