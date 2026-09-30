@@ -1,0 +1,31 @@
+{
+  "_LISEZMOI": "À fusionner dans joxia-admin/database.rules.json (sous \"rules\"), puis : node rules.js test && node rules.js deploy. Chemins utilisés par tracker.js (écriture) et le carrousel « Tendances » du hub (lecture).",
+
+  "live": {
+    ".read": true,
+    "$game": {
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "$game.matches(/^[A-Z0-9_]{1,32}$/) && newData.isNumber() && newData.val() <= now + 60000"
+      }
+    }
+  },
+
+  "stats": {
+    ".read": true,
+    "$game": {
+      ".validate": "$game.matches(/^[A-Z0-9_]{1,32}$/)",
+      "plays": {
+        ".write": "auth != null",
+        ".validate": "newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1"
+      },
+      "d": {
+        "$day": {
+          ".write": "auth != null",
+          ".validate": "$day.matches(/^20[0-9]{6}$/) && newData.isNumber() && newData.val() > (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 120"
+        }
+      },
+      "$other": { ".validate": false }
+    }
+  }
+}

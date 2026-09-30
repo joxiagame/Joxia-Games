@@ -855,16 +855,16 @@ function applyTheme(theme, saveProfile = true) {
 
 /* ================= JEUX (rendu dynamique + ouverture centralisée) ================= */
 const GAMES = [
-    { name: 'Snake Joxia',       image: 'Snake.png',          tags: ['Arcade', 'Rétro'],       url: 'https://joxiagame.github.io/Snake-Joxia/' },
-    { name: 'Flappy Joxia',      image: 'Flappy Bird.png',    tags: ['Arcade', 'Réflexes'],    url: 'https://joxiagame.github.io/Flappy-Bird-Joxia/', isNew: true },
-    { name: 'Tetris Joxia',      image: 'Tetris.png',         tags: ['Puzzle', 'Briques'],     url: 'https://joxiagame.github.io/Tetris-Joxia/' },
-    { name: 'Ball Blast Joxia',  image: 'Ball Blast.png',     tags: ['Action', 'Tir'],         url: 'https://joxiagame.github.io/Ball-Blast-joxia/' },
-    { name: 'Brick Blast Joxia', image: 'Brick Blast.png',    tags: ['Arcade', 'Casse-briques'], url: 'https://joxiagame.github.io/Breakout-Joxia/', isNew: true },
-    { name: '2048 Joxia',        image: '2048.png',           tags: ['Puzzle', 'Chiffres'],    url: 'https://joxiagame.github.io/2048-joxia/', isNew: true },
-    { name: 'Pac-Man Joxia',     image: 'Pac-Man.png',        tags: ['Arcade', 'Labyrinthe'],  url: 'https://joxiagame.github.io/Pacman-Joxia/', isNew: true },
-    { name: 'Codebreaker Joxia', image: 'Codebreaker.webp',   tags: ['Puzzle', 'Décodage'],    url: 'https://joxiagame.github.io/Codebreaker-Joxia/', isNew: true },
-    { name: 'Crypto Tycoon Joxia', image: 'Crypto Tycoon.png', tags: ['Stratégie', 'Trading'], url: 'https://joxiagame.github.io/Crypto-Tycoon-Joxia/', isNew: true },
-    { name: 'Billard Joxia',       image: 'Billard.png',        tags: ['Sport', '8-ball'],       url: 'https://joxiagame.github.io/Pool-Joxia/', isNew: true },
+    { id: 'SNAKE', desc: 'Le classique : mange, grandis et évite ta propre queue.', name: 'Snake Joxia',       image: 'Snake.png',          tags: ['Arcade', 'Rétro'],       url: 'https://joxiagame.github.io/Snake-Joxia/' },
+    { id: 'FLAPPY', desc: 'Tape pour voler entre les tuyaux, le plus loin possible.', name: 'Flappy Joxia',      image: 'Flappy Bird.png',    tags: ['Arcade', 'Réflexes'],    url: 'https://joxiagame.github.io/Flappy-Bird-Joxia/', isNew: true },
+    { id: 'TETRIS', desc: 'Empile les blocs et fais tomber les lignes.', name: 'Tetris Joxia',      image: 'Tetris.png',         tags: ['Puzzle', 'Briques'],     url: 'https://joxiagame.github.io/Tetris-Joxia/' },
+    { id: 'BALLBLAST', desc: "Tire sur les boules avant qu'elles ne t'écrasent.", name: 'Ball Blast Joxia',  image: 'Ball Blast.png',     tags: ['Action', 'Tir'],         url: 'https://joxiagame.github.io/Ball-Blast-joxia/' },
+    { id: 'BRICKBLAST', desc: 'Casse toutes les briques avec ta balle.', name: 'Brick Blast Joxia', image: 'Brick Blast.png',    tags: ['Arcade', 'Casse-briques'], url: 'https://joxiagame.github.io/Breakout-Joxia/', isNew: true },
+    { id: '2048', desc: "Fusionne les tuiles jusqu'à atteindre 2048.", name: '2048 Joxia',        image: '2048.png',           tags: ['Puzzle', 'Chiffres'],    url: 'https://joxiagame.github.io/2048-joxia/', isNew: true },
+    { id: 'PACMAN', desc: 'Mange les pac-gommes sans croiser les fantômes.', name: 'Pac-Man Joxia',     image: 'Pac-Man.png',        tags: ['Arcade', 'Labyrinthe'],  url: 'https://joxiagame.github.io/Pacman-Joxia/', isNew: true },
+    { id: 'CODEBREAKER', desc: "Trouve le code secret en un minimum d'essais.", name: 'Codebreaker Joxia', image: 'Codebreaker.webp',   tags: ['Puzzle', 'Décodage'],    url: 'https://joxiagame.github.io/Codebreaker-Joxia/', isNew: true },
+    { id: 'CRYPTO', desc: 'Achète, revends et deviens le roi du trading.', name: 'Crypto Tycoon Joxia', image: 'Crypto Tycoon.png', tags: ['Stratégie', 'Trading'], url: 'https://joxiagame.github.io/Crypto-Tycoon-Joxia/', isNew: true },
+    { id: 'POOL', desc: 'Billard 8-ball : empoche tes billes, puis la noire.', name: 'Billard Joxia',       image: 'Billard.png',        tags: ['Sport', '8-ball'],       url: 'https://joxiagame.github.io/Pool-Joxia/', isNew: true },
 ];
 
 let showAll = false;
@@ -924,6 +924,188 @@ function openGame(url) {
 }
 
 renderGames();
+
+/* ================= TENDANCES (carrousel en direct) =================
+   Classement = temps joué sur 7 jours (stats/{ID}/d/{AAAAMMJJ}, écrit par tracker.js)
+   + joueurs en jeu maintenant (live/{ID}/{uid}), chaque joueur présent pesant 30 min.
+   Sans données (règles pas encore publiées, plateforme calme) : sélection « À la une ». */
+const EXTERNAL_GAMES = [
+    { id: 'INFINITECRAFT', name: 'Infinite Craft', image: 'infinite-craft.png', tags: ['Alchimie', 'Découverte'], url: 'https://joxiagame.github.io/infinite-craft-joxia/', desc: "Combine l'eau, le feu, le vent et la terre pour créer des milliers d'éléments." },
+    { id: 'HEXGL', name: 'HexGL', image: 'hexgl.png', tags: ['Course', '3D'], url: 'https://joxiagame.github.io/hexgl-joxia/', desc: 'Course futuriste en 3D, à pleine vitesse.' },
+    { id: 'SHAPEZ', name: 'Shapez.io', image: 'shapez.png', tags: ['Automatisation', 'Usine'], url: 'https://joxiagame.github.io/Shapez-joxia/', desc: 'Construis une usine géante qui assemble des formes à l’infini.' },
+    { id: 'ADARKROOM', name: 'A Dark Room', image: 'a-dark-room.png', tags: ['Aventure', 'Incrémental'], url: 'https://joxiagame.github.io/a-dark-room-joxia/', desc: 'Rallume le feu… et découvre ce qui t’attend dehors.' },
+    { id: 'MINDUSTRY', name: 'Mindustry', image: 'mindustry.png', tags: ['Tycoon', 'Tower Defense'], url: 'https://joxiagame.github.io/Mindustry-joxia/', desc: 'Automatise ta base et défends-la contre les vagues ennemies.' },
+    { id: '3DCITY', name: '3d.city', image: '3d-city.png', tags: ['Gestion', 'Ville'], url: 'https://joxiagame.github.io/3d-city-joxia/', desc: 'Bâtis et gère ta propre ville en 3D.' },
+    { id: 'SURVIVOR', name: 'Survivor', image: 'survivor.png', tags: ['Roguelite', 'Survie'], url: 'https://joxiagame.github.io/survivor-joxia/', desc: 'Survis aux hordes et deviens toujours plus puissant.' },
+    { id: 'SANDSPIEL', name: 'Sandspiel', image: 'sandspiel.png', tags: ['Bac à sable', 'Physique'], url: 'https://joxiagame.github.io/sandspiel-joxia/', desc: 'Fais couler du sable, de l’eau, du feu… et observe.' },
+    { id: 'TOWERDEFENSE', name: 'Tower Defense', image: 'tower-defense.png', tags: ['Stratégie', 'Tower Defense'], url: 'https://joxiagame.github.io/tower-defense-joxia/', desc: 'Place tes tours et repousse les vagues d’ennemis.' },
+    { id: 'HEXTRIS', name: 'Hextris', image: 'hextris.png', tags: ['Puzzle', 'Réflexes'], url: 'https://joxiagame.github.io/hextris-joxia/', desc: 'Tourne l’hexagone et aligne les couleurs.' },
+    { id: 'POND', name: 'The Pond', image: 'pond.png', tags: ['Arcade', 'Survie'], url: 'https://joxiagame.github.io/pond-joxia/', desc: 'Nage, mange et grandis dans un étang néon.' },
+    { id: 'DRAKONAS', name: 'Drakonas', image: 'drakonas.png', tags: ['Action', 'Avions'], url: 'https://joxiagame.github.io/drakonas-joxia/', desc: 'Pilote ton avion de chasse et abats tout ce qui bouge.' },
+    { id: 'RAGINGGARDENS', name: 'Raging Gardens', image: 'raging-gardens.png', tags: ['Arcade', 'Action'], url: 'https://joxiagame.github.io/raging-gardens-joxia/', desc: 'Un lapin ninja, des carottes… et des flatulences tactiques.' },
+    { id: 'PARTICLECLICKER', name: 'Particle Clicker', image: 'particle-clicker.png', tags: ['Clicker', 'Science'], url: 'https://joxiagame.github.io/particle-clicker-joxia/', desc: 'Dirige ton labo de physique, clic après clic.' },
+    { id: 'DRUNKENVIKING', name: 'Drunken Viking', image: 'drunken-viking.png', tags: ['Arcade', 'Pixel art'], url: 'https://joxiagame.github.io/drunken-viking-joxia/', desc: 'Un viking éméché, un labyrinthe à traverser.' },
+];
+const CATALOG = {};
+GAMES.forEach(g => { CATALOG[g.id] = Object.assign({ internal: true }, g); });
+EXTERNAL_GAMES.forEach(g => { CATALOG[g.id] = g; });
+const TREND_DEFAULT = ['HEXGL', 'INFINITECRAFT', 'SHAPEZ', 'ADARKROOM', 'SNAKE', 'TETRIS', 'MINDUSTRY', '3DCITY'];
+const TREND_MAX = 8, TREND_DAYS = 7, TREND_AUTOPLAY = 7000;
+
+const trend = { live: null, stats: null, order: [], index: 0, timer: null, pausedUntil: 0, hadData: false, loaded: { live: false, stats: false } };
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function fmtPlayed(sec) {
+    const h = Math.floor(sec / 3600), m = Math.round((sec % 3600) / 60);
+    if (h >= 1) return `${h} h${m ? ' ' + String(m).padStart(2, '0') : ''}`;
+    return `${Math.max(1, m)} min`;
+}
+function trendScores() {
+    const days = [];
+    for (let i = 0; i < TREND_DAYS; i++) days.push(new Date(Date.now() - i * 864e5).toISOString().slice(0, 10).replace(/-/g, ''));
+    const stale = Date.now() - 12 * 3600e3;  // présence oubliée (onDisconnect raté) : ignorée
+    return Object.keys(CATALOG).map(id => {
+        const d = (trend.stats && trend.stats[id] && trend.stats[id].d) || {};
+        const week = days.reduce((n, k) => n + (Number(d[k]) || 0), 0);
+        const live = Object.values((trend.live && trend.live[id]) || {}).filter(t => typeof t !== 'number' || t > stale).length;
+        const plays = Number(trend.stats && trend.stats[id] && trend.stats[id].plays) || 0;
+        return { id, week, live, plays, score: week + live * 1800 };
+    });
+}
+function trendRanking() {
+    const scored = trendScores().filter(x => x.score > 0).sort((a, b) => b.score - a.score);
+    const ranked = scored.slice(0, TREND_MAX);
+    const hasData = ranked.length > 0;
+    // compléter avec la sélection par défaut pour garder un carrousel bien rempli
+    const target = hasData ? Math.max(5, ranked.length) : TREND_MAX;
+    for (const id of TREND_DEFAULT) {
+        if (ranked.length >= target) break;
+        if (!ranked.some(x => x.id === id)) ranked.push({ id, week: 0, live: 0, plays: 0, score: 0 });
+    }
+    return { list: ranked, hasData };
+}
+function slideStats(x) {
+    const out = [];
+    if (x.live) out.push(`<span class="is-live">${x.live} joueur${x.live > 1 ? 's' : ''} en ce moment</span>`);
+    if (x.week) out.push(`<span>⏱ ${fmtPlayed(x.week)} jouées cette semaine</span>`);
+    if (x.plays) out.push(`<span>▶ ${x.plays.toLocaleString('fr-FR')} partie${x.plays > 1 ? 's' : ''}</span>`);
+    return out.join('');
+}
+function imgSrc(g) { return g.internal ? `${encodeURI(g.image)}?v=2` : encodeURI(g.image); }
+
+function renderTrending() {
+    const track = el('trendTrack'), thumbs = el('trendThumbs');
+    if (!track) return;
+    const { list, hasData } = trendRanking();
+    el('trendLabel').textContent = hasData ? 'Tendances du moment' : 'À la une';
+    el('trendLive').hidden = !hasData;
+    const ids = list.map(x => x.id);
+    const sameOrder = ids.join() === trend.order.join();
+    if (sameOrder) {
+        // même classement : on ne met à jour que les chiffres (pas de saut visuel)
+        list.forEach((x, i) => {
+            const st = track.children[i] && track.children[i].querySelector('.trend-stats');
+            if (st) st.innerHTML = slideStats(x);
+            const dot = thumbs.children[i] && thumbs.children[i].querySelector('.tdot');
+            if (dot) dot.hidden = !x.live;
+        });
+        return;
+    }
+    const currentId = trend.order[trend.index];
+    trend.order = ids;
+    const n = list.length;
+    track.innerHTML = list.map((x, i) => {
+        const g = CATALOG[x.id];
+        return `<li class="trend-slide" role="group" aria-roledescription="diapositive" aria-label="${i + 1} sur ${n} : ${escapeHtml(g.name)}">
+            <img class="trend-bg" src="${imgSrc(g)}" alt="" ${i ? 'loading="lazy"' : ''} decoding="async">
+            <div class="trend-info">
+                ${hasData && x.score ? `<span class="trend-rank">🔥 N°${i + 1} des tendances</span>` : '<span class="trend-rank">⭐ À découvrir</span>'}
+                <h3>${escapeHtml(g.name)}</h3>
+                <p class="trend-desc">${escapeHtml(g.desc || '')}</p>
+                <div class="trend-stats">${slideStats(x)}</div>
+                <button class="trend-play" type="button" data-id="${x.id}">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                    Jouer à ${escapeHtml(g.name)}
+                </button>
+            </div>
+            <div class="trend-art"><img src="${imgSrc(g)}" alt="${escapeHtml(g.name)}" ${i ? 'loading="lazy"' : ''} decoding="async"></div>
+        </li>`;
+    }).join('');
+    thumbs.innerHTML = list.map((x, i) => {
+        const g = CATALOG[x.id];
+        return `<button class="trend-thumb" type="button" role="tab" aria-selected="false" data-i="${i}" aria-label="${escapeHtml(g.name)}">
+            <img src="${imgSrc(g)}" alt="" loading="lazy" decoding="async"><b>${i + 1}</b> ${escapeHtml(g.name)}<i class="tdot" ${x.live ? '' : 'hidden'}></i>
+        </button>`;
+    }).join('');
+    track.querySelectorAll('.trend-play').forEach(b => { b.onclick = () => playFromTrend(b.dataset.id); });
+    thumbs.querySelectorAll('.trend-thumb').forEach(b => { b.onclick = () => { trendGo(+b.dataset.i); trendPause(12000); }; });
+    // garde à l'écran le jeu qu'on regardait, même s'il change de rang ;
+    // à l'arrivée des premières vraies données, on repart du N°1
+    const keep = trend.hadData ? Math.max(0, ids.indexOf(currentId)) : 0;
+    trend.hadData = hasData && trend.loaded.live && trend.loaded.stats;
+    trendGo(keep, true);
+}
+function playFromTrend(id) {
+    const g = CATALOG[id];
+    if (!g) return;
+    if (g.internal) openGame(g.url);          // jeux maison : connexion + pseudo/avatar transmis
+    else window.location.href = g.url;       // jeux tiers : sauvegarde locale, lien direct
+}
+function trendGo(i, instant) {
+    const track = el('trendTrack'), n = trend.order.length;
+    if (!track || !n) return;
+    trend.index = (i + n) % n;
+    track.scrollTo({ left: trend.index * track.clientWidth, behavior: instant || reduceMotion ? 'auto' : 'smooth' });
+    trendSync();
+}
+function trendSync() {
+    const thumbs = el('trendThumbs');
+    if (!thumbs) return;
+    [...thumbs.children].forEach((b, i) => b.setAttribute('aria-selected', String(i === trend.index)));
+    const cur = thumbs.children[trend.index];
+    if (cur) thumbs.scrollTo({ left: cur.offsetLeft - thumbs.clientWidth / 2 + cur.offsetWidth / 2, behavior: reduceMotion ? 'auto' : 'smooth' });
+}
+function trendPause(ms) { trend.pausedUntil = Date.now() + ms; }
+
+(function initTrending() {
+    const track = el('trendTrack');
+    if (!track) return;
+    const box = el('trending');
+    el('trendPrev').onclick = () => { trendGo(trend.index - 1); trendPause(12000); };
+    el('trendNext').onclick = () => { trendGo(trend.index + 1); trendPause(12000); };
+    // l'index suit le défilement manuel (doigt, trackpad)
+    let raf = 0;
+    track.addEventListener('scroll', () => {
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(() => {
+            const i = Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
+            if (i !== trend.index) { trend.index = i; trendSync(); }
+        });
+    }, { passive: true });
+    track.addEventListener('pointerdown', () => trendPause(12000), { passive: true });
+    track.tabIndex = 0;
+    track.setAttribute('aria-label', 'Jeux tendance (flèches gauche/droite pour naviguer)');
+    box.addEventListener('keydown', e => {
+        if (e.key === 'ArrowRight') { e.preventDefault(); trendGo(trend.index + 1); trendPause(15000); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); trendGo(trend.index - 1); trendPause(15000); }
+    });
+    // lecture auto : en pause au survol, au focus clavier et onglet caché ; désactivée si mouvement réduit
+    let hover = false;
+    box.addEventListener('mouseenter', () => { hover = true; });
+    box.addEventListener('mouseleave', () => { hover = false; });
+    if (!reduceMotion) {
+        trend.timer = setInterval(() => {
+            if (hover || document.hidden || box.contains(document.activeElement) || Date.now() < trend.pausedUntil) return;
+            trendGo(trend.index + 1);
+        }, TREND_AUTOPLAY);
+    }
+    window.addEventListener('resize', () => trendGo(trend.index, true));
+    renderTrending();  // sélection par défaut tout de suite, puis données en direct
+    onValue(ref(db, 'live'), snap => { trend.live = snap.val() || {}; trend.loaded.live = true; renderTrending(); },
+        () => { trend.loaded.live = true; renderTrending(); });
+    onValue(ref(db, 'stats'), snap => { trend.stats = snap.val() || {}; trend.loaded.stats = true; renderTrending(); },
+        () => { trend.loaded.stats = true; renderTrending(); });
+})();
 
 /* ================= NAVIGATION SIDEBAR + PROFIL ================= */
 const spConnect = el('spConnect');
