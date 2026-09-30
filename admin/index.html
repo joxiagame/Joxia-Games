@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin.css?v=1">
+    <link rel="stylesheet" href="admin.css?v=2">
 </head>
 <body>
 
@@ -50,7 +50,8 @@
 
     <nav class="tabs" role="tablist">
         <button class="tab active" data-tab="dash" role="tab">Tableau de bord</button>
-        <button class="tab" data-tab="chat" role="tab">Chat <span class="pill" id="chatCount">0</span></button>
+        <button class="tab" data-tab="games" role="tab">Jeux <span class="pill" id="playCount">0</span></button>
+        <button class="tab" data-tab="chat" role="tab">Salon <span class="pill" id="chatCount">0</span></button>
         <button class="tab" data-tab="accounts" role="tab">Comptes <span class="pill" id="accCount">0</span></button>
     </nav>
 
@@ -69,7 +70,22 @@
         </div>
     </section>
 
-    <!-- Modération du chat -->
+    <!-- Jeux : qui joue à quoi + jeux les plus joués -->
+    <section class="panel hidden" id="tab-games">
+        <div class="grid-2">
+            <div class="card">
+                <h2>En train de jouer</h2>
+                <ul class="mini-list" id="playingList"></ul>
+            </div>
+            <div class="card">
+                <h2>Jeux les plus joués</h2>
+                <ul class="bars" id="topGames"></ul>
+            </div>
+        </div>
+        <p class="muted small note">Seul le temps passé onglet ouvert et visible est compté, et uniquement pour les joueurs connectés.</p>
+    </section>
+
+    <!-- Modération du salon principal -->
     <section class="panel hidden" id="tab-chat">
         <div class="toolbar">
             <input type="search" id="chatSearch" placeholder="Filtrer par pseudo ou texte…">
@@ -82,8 +98,16 @@
     <section class="panel hidden" id="tab-accounts">
         <div class="toolbar">
             <input type="search" id="accSearch" placeholder="Rechercher un pseudo…">
+            <select id="accFilter" aria-label="Filtrer">
+                <option value="all">Tous</option>
+                <option value="online">En ligne</option>
+                <option value="playing">En jeu</option>
+                <option value="suspended">Suspendus</option>
+                <option value="banned">Bannis du salon</option>
+            </select>
             <select id="accSort" aria-label="Trier">
                 <option value="lastSeen">Dernière activité</option>
+                <option value="playtime">Temps de jeu</option>
                 <option value="created">Inscription récente</option>
                 <option value="score">Meilleur score total</option>
                 <option value="name">Pseudo (A→Z)</option>
@@ -97,8 +121,28 @@
 <div class="drawer-backdrop hidden" id="drawerBackdrop"></div>
 <aside class="drawer hidden" id="drawer" aria-modal="true" role="dialog"></aside>
 
+<!-- Choix d'une durée de sanction -->
+<div class="modal-backdrop hidden" id="modal">
+    <form class="modal" id="modalForm" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <h2 id="modalTitle"></h2>
+        <p class="muted small" id="modalText"></p>
+        <div class="durations" id="durations" role="radiogroup" aria-label="Durée"></div>
+        <label class="field hidden" id="customWrap">Jusqu'au
+            <input type="datetime-local" id="customUntil">
+        </label>
+        <label class="field">Motif (affiché au joueur, facultatif)
+            <input id="modalReason" maxlength="200" placeholder="Ex. insultes dans le salon">
+        </label>
+        <p class="form-msg" id="modalMsg" role="alert"></p>
+        <div class="modal__actions">
+            <button type="button" class="btn btn--ghost" id="modalCancel">Annuler</button>
+            <button type="submit" class="btn btn--danger" id="modalOk">Confirmer</button>
+        </div>
+    </form>
+</div>
+
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
-<script type="module" src="admin.js?v=1"></script>
+<script type="module" src="admin.js?v=2"></script>
 </body>
 </html>

@@ -988,10 +988,50 @@ try {
     el('soundToggle').checked = localStorage.getItem('joxia-sound') !== 'off';
 } catch (e) {}
 
+/* ================= SUSPENSION DE COMPTE (décidée par un admin) ================= */
+let suspensionUnsub = null, suspensionTimer = null;
+function showSuspension(s) {
+    let o = document.getElementById('suspendedOverlay');
+    if (!s) { if (o) o.remove(); return; }
+    if (!o) {
+        o = document.createElement('div');
+        o.id = 'suspendedOverlay';
+        o.setAttribute('role', 'alertdialog');
+        o.style.cssText = 'position:fixed;inset:0;z-index:2147483646;display:grid;place-items:center;padding:20px;background:rgba(20,14,8,.78);backdrop-filter:blur(6px)';
+        document.body.appendChild(o);
+    }
+    const until = s.until >= 9e12 ? 'définitivement'
+        : "jusqu'au " + new Date(s.until).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' });
+    o.innerHTML = `<div style="max-width:380px;width:100%;background:var(--surface,#fff);color:var(--text,#20180F);border-radius:18px;padding:28px 24px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.3)">
+        <div style="font-size:42px">⛔</div>
+        <h2 style="margin:8px 0 6px;font-size:21px">Compte suspendu</h2>
+        <p style="margin:0 0 8px;color:var(--text-2,#5C5344)">Ton compte est suspendu ${until}.</p>
+        ${s.reason ? `<p style="margin:0 0 14px;color:var(--text-2,#5C5344)">Motif : ${escapeHtml(s.reason)}</p>` : ''}
+        <button id="suspendedLogout" style="border:0;background:#FF6A2A;color:#fff;font:inherit;font-weight:700;padding:11px 20px;border-radius:12px;cursor:pointer">Se déconnecter</button>
+    </div>`;
+    o.querySelector('#suspendedLogout').onclick = () => signOut(auth);
+}
+function watchSuspension(uid) {
+    unwatchSuspension();
+    suspensionUnsub = onValue(ref(db, `suspensions/${uid}`), snap => {
+        clearTimeout(suspensionTimer);
+        const s = snap.val();
+        const active = !!(s && s.until > Date.now());
+        showSuspension(active ? s : null);
+        if (active && s.until < 9e12) suspensionTimer = setTimeout(() => showSuspension(null), Math.min(s.until - Date.now(), 2 ** 31 - 1));
+    }, () => {});
+}
+function unwatchSuspension() {
+    if (suspensionUnsub) { suspensionUnsub(); suspensionUnsub = null; }
+    clearTimeout(suspensionTimer);
+    showSuspension(null);
+}
+
 onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     if (user) {
         const username = user.email.split('@')[0];
+        watchSuspension(user.uid);
         await ensureProfile(user, username);
         setupPresence(user.uid);
         if (profileListener) { profileListener(); profileListener = null; }
@@ -1004,6 +1044,7 @@ onAuthStateChanged(auth, async (user) => {
         attachChatListeners(user.uid);
     } else {
         profile = null;
+        unwatchSuspension();
         detachListeners();
         renderUserButton();
     }
