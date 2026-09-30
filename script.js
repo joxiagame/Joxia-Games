@@ -986,6 +986,11 @@ function trendRanking() {
 }
 function slideStats(x) {
     const out = [];
+    if (!x.live && !x.week && !x.plays) {
+        // pas encore de chiffres pour ce jeu : infos réelles plutôt que des statistiques inventées
+        const g = CATALOG[x.id] || {};
+        return (g.tags || []).map(t => `<span>${escapeHtml(t)}</span>`).join('') + '<span>🎮 Gratuit · sans installation</span>';
+    }
     if (x.live) out.push(`<span class="is-live">${x.live} joueur${x.live > 1 ? 's' : ''} en ce moment</span>`);
     if (x.week) out.push(`<span>⏱ ${fmtPlayed(x.week)} jouées cette semaine</span>`);
     if (x.plays) out.push(`<span>▶ ${x.plays.toLocaleString('fr-FR')} partie${x.plays > 1 ? 's' : ''}</span>`);
