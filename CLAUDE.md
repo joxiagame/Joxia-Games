@@ -122,3 +122,14 @@ Chaque jeu tiers open-source **statique** vit dans **son propre repo** `joxiagam
 - Fichiers supprimés (poids mort) : `*.map`, `service-worker.js`, `workbox-*.js`, `manifest.json`, `assets/ads.txt`.
 - Volet promo « PullTab » (Discord + App Store payant de l'auteur) masqué via `#PullTab{display:none}` dans `index.html`.
 - ⚠️ Bouton « Upload » (partage) contacte le serveur de l'auteur (`a.sandspiel.club`) → échoue silencieusement hors-ligne. i18n **anglais uniquement**.
+
+## Administration & sécurité (Firebase)
+
+- **Panneau admin** : `admin/` → https://joxiagame.github.io/Joxia-Games/admin/ (non indexé). Connexion avec un compte Joxia ; accès si `admins/{uid} === true`. Fonctions : modération du chat global (supprimer, bannir/débannir, purger les messages d'un joueur), suivi des comptes (statut en ligne, dernière activité, inscription, amis, meilleurs scores). Les **messages privés** (`chats/`) restent inaccessibles aux admins (confidentialité).
+- **Règles de la Realtime Database** : verrouillées (plus de `.read/.write: true` global). Source : `C:\Users\basil\Documents\joxia-admin\database.rules.json` (hors repo). Les **droits sont vérifiés côté serveur**, pas par l'interface.
+  - `games/$jeu/scores` reste **ouvert** (les jeux écrivent sans être connectés) + index `score`/`name`. Tout nouveau jeu doit écrire **uniquement** sous `games/<JEU>/scores`, sinon il sera refusé.
+  - Tout **nouveau chemin** ajouté au hub (ex. `notifications/`) doit être déclaré dans les règles, sinon refus par défaut.
+- **Outils locaux** (`joxia-admin/`, clé `service-account.json` qui ne doit **jamais** être commitée ni publiée) :
+  - `node rules.js test` → 30 tests automatiques (utilisateurs simulés) ; `node rules.js deploy` → sauvegarde dans `backups/` puis publie ; `node rules.js restore backups/<fichier>` → retour arrière.
+  - `node set-admin.js <pseudo>` / `--remove` / `--list` → gérer les admins (seul moyen d'écrire dans `admins/`).
+  - ⚠️ `wipe-auth.js` supprime **tous** les comptes : ne jamais lancer sans `--dry`.
