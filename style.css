@@ -124,6 +124,7 @@ button,a,input,.avatar-opt,.color-opt{outline:none;}
     transition:background .18s var(--ease),color .18s var(--ease);
 }
 .nav-item svg{flex-shrink:0;}
+.nav-admin{text-decoration:none;color:var(--orange);}
 .nav-item:hover{background:var(--hover);color:var(--text);}
 .nav-item.active{
     background:linear-gradient(90deg,var(--orange),rgba(255,138,61,.35));

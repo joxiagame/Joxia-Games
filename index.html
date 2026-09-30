@@ -46,6 +46,11 @@
                 <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h13"/><circle cx="15" cy="7" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="19" cy="17" r="1.6"/></svg>
                 <span>Paramètres</span>
             </button>
+            <!-- Visible uniquement si admins/{uid} === true (voir script.js › watchAdmin) -->
+            <a class="nav-item nav-admin" id="navAdmin" href="admin/" style="display:none;">
+                <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>
+                <span>Admin</span>
+            </a>
         </nav>
 
         <div class="sidebar-footer">
