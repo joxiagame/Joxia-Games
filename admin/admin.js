@@ -32,6 +32,9 @@ const PLAY_LABELS = {
     SNAKE: 'Snake', FLAPPY: 'Flappy', TETRIS: 'Tetris', BALLBLAST: 'Ball Blast', BRICKBLAST: 'Brick Blast',
     '2048': '2048', PACMAN: 'Pac-Man', POOL: 'Billard', CODEBREAKER: 'Codebreaker', CRYPTO: 'Crypto Tycoon',
     SHAPEZ: 'Shapez', MINDUSTRY: 'Mindustry', SURVIVOR: 'Survivor', SANDSPIEL: 'Sandspiel', INFINITECRAFT: 'Infinite Craft',
+    // jeux leereilly/games — lot 1
+    HEXGL: 'HexGL', ADARKROOM: 'A Dark Room', '3DCITY': '3d.city', TOWERDEFENSE: 'Tower Defense', HEXTRIS: 'Hextris',
+    POND: 'The Pond', DRAKONAS: 'Drakonas', RAGINGGARDENS: 'Raging Gardens', PARTICLECLICKER: 'Particle Clicker', DRUNKENVIKING: 'Drunken Viking',
 };
 const gameName = id => PLAY_LABELS[id] || id;
 const CHAT_LIMIT = 300;
