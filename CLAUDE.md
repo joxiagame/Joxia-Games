@@ -133,3 +133,8 @@ Chaque jeu tiers open-source **statique** vit dans **son propre repo** `joxiagam
   - `node rules.js test` → 30 tests automatiques (utilisateurs simulés) ; `node rules.js deploy` → sauvegarde dans `backups/` puis publie ; `node rules.js restore backups/<fichier>` → retour arrière.
   - `node set-admin.js <pseudo>` / `--remove` / `--list` → gérer les admins (seul moyen d'écrire dans `admins/`).
   - ⚠️ `wipe-auth.js` supprime **tous** les comptes : ne jamais lancer sans `--dry`.
+- **Suivi du temps de jeu** : `tracker.js` (racine du hub). Chaque jeu l'inclut juste avant `</body>` :
+  `<script type="module" src="https://joxiagame.github.io/Joxia-Games/tracker.js?game=<ID>"></script>`
+  (IDs : SNAKE, FLAPPY, TETRIS, BALLBLAST, BRICKBLAST, 2048, PACMAN, POOL, CODEBREAKER, CRYPTO, SHAPEZ, MINDUSTRY (dans `game.html`), SURVIVOR, SANDSPIEL, INFINITECRAFT). **Tout nouveau jeu doit l'ajouter** + son libellé dans `PLAY_LABELS` (`admin/admin.js`). Réutilise la session du hub (même domaine) ; ne compte que le temps onglet visible ; écrit `playing/{uid}` et `playtime/{uid}` ; affiche un écran de blocage si le compte est suspendu.
+- **Sanctions** : `suspensions/{uid}` (compte bloqué : hub + jeux + chat/MP/amis refusés par les règles) et `banned/{uid}` (salon seulement), avec `until` (timestamp ; `9999999999999` = définitif). Levée automatique à l'échéance.
+- **Suppression définitive** : `node delete-user.js <pseudo>` (aperçu) puis `--yes` (options `--keep-chat`, `--keep-scores`). Supprime compte de connexion + profil, amitiés, demandes, MP (des deux côtés), messages du salon, scores, temps de jeu.
