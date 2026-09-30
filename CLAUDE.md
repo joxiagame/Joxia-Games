@@ -130,6 +130,7 @@ Chaque jeu tiers open-source **statique** vit dans **son propre repo** `joxiagam
 - Import : `python scripts/import_leereilly_games.py` (aperçu) puis `--apply` (`--only <slug>`, `--limit N`, `--niveau build|nc`). Fork `joxiagame/<slug>` (historique + LICENSE + assets conservés), ajoute `CREDITS.md`, bandeau README entre `<!-- joxia-credits -->`, `tracker.js`, `.nojekyll`, active Pages. Refuse de committer si un fichier de licence est touché ; relançable sans doublon.
 - Après import : coller les cartes générées (`cartes-hub.html`) dans « Découvre aussi », ajouter `<slug sans -joxia>.png` et les entrées `PLAY_LABELS` affichées.
 - Slugs déjà pris chez joxiagame (2048, Snake, Flappy Bird) → suffixe `-oss-joxia`.
+- **Lots de 10** (`docs/leereilly-games/LOTS.md`, colonnes `lot`/`potentiel`/`test_navigateur` du CSV) : les 49 jeux ✅ ont été testés dans Chromium ; 40 retenus en 4 lots (1 = plus fort potentiel, 4 = à corriger ou doublons), 9 reclassés (build requis, Unity Web Player, serveur, pas un jeu). Import : `--lot N --apply`.
 
 ## Administration & sécurité (Firebase)
 
