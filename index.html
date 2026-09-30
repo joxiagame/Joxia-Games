@@ -129,6 +129,28 @@
             </div>
         </section>
 
+        <!-- Tendances : carrousel des jeux les plus joués, mis à jour en direct (script.js › TENDANCES) -->
+        <section class="trending" id="trending" aria-roledescription="carrousel" aria-labelledby="trendTitle">
+            <div class="trend-head">
+                <h2 class="trend-title" id="trendTitle">
+                    <span class="trend-live" id="trendLive"><i></i> En direct</span>
+                    <span id="trendLabel">Tendances du moment</span>
+                </h2>
+                <div class="trend-nav">
+                    <button class="trend-arrow" id="trendPrev" type="button" aria-label="Jeu précédent">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>
+                    </button>
+                    <button class="trend-arrow" id="trendNext" type="button" aria-label="Jeu suivant">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="trend-viewport">
+                <ul class="trend-track" id="trendTrack" aria-live="polite"></ul>
+            </div>
+            <div class="trend-thumbs" id="trendThumbs" role="tablist" aria-label="Choisir un jeu"></div>
+        </section>
+
         <!-- Tes jeux -->
         <section class="section" id="games">
             <div class="section-head">

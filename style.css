@@ -706,3 +706,112 @@ button,a,input,.avatar-opt,.color-opt{outline:none;}
 @media (prefers-reduced-motion:reduce){
     *{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;scroll-behavior:auto !important;}
 }
+
+/* ============================================================
+   TENDANCES — carrousel des jeux les plus joués (en direct)
+   Défilement natif (scroll-snap) : glisser au doigt, trackpad,
+   flèches, vignettes, clavier. Lecture auto en pause au survol/focus.
+   ============================================================ */
+.trending{max-width:1600px;margin:0 auto;width:100%;padding:8px 36px 8px;}
+.trend-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;}
+.trend-title{
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0;
+    font-family:'Plus Jakarta Sans',var(--font);font-size:1.5rem;font-weight:750;letter-spacing:-.3px;
+}
+.trend-live{
+    display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;
+    background:var(--danger);color:#fff;font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+}
+.trend-live i{width:7px;height:7px;border-radius:50%;background:#fff;animation:trendPulse 1.6s ease-in-out infinite;}
+.trend-live[hidden]{display:none;}
+.trend-nav{display:flex;gap:8px;}
+.trend-arrow{
+    width:42px;height:42px;border-radius:50%;display:grid;place-items:center;cursor:pointer;
+    background:var(--surface);color:var(--text);border:1px solid var(--border);box-shadow:var(--shadow-card);
+    transition:transform .15s var(--ease),border-color .15s;
+}
+.trend-arrow:hover{border-color:var(--orange);transform:translateY(-1px);}
+
+.trend-viewport{border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-lg);background:#1a130c;}
+.trend-track{
+    list-style:none;margin:0;padding:0;display:flex;overflow-x:auto;
+    scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;
+}
+.trend-track::-webkit-scrollbar{display:none;}
+.trend-slide{
+    position:relative;flex:0 0 100%;scroll-snap-align:start;isolation:isolate;overflow:hidden;
+    display:grid;grid-template-columns:1.05fr 1fr;gap:32px;align-items:center;
+    min-height:340px;padding:34px 40px;color:#fff;
+}
+/* fond : l'image du jeu floutée (les miniatures 640×400 restent nettes à droite) */
+.trend-bg{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2;
+    filter:blur(28px) saturate(1.3) brightness(.6);transform:scale(1.25);
+}
+.trend-slide::after{
+    content:"";position:absolute;inset:0;z-index:-1;
+    background:linear-gradient(90deg,rgba(14,10,6,.82) 0%,rgba(14,10,6,.45) 55%,rgba(14,10,6,.2) 100%);
+}
+.trend-rank{
+    display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:999px;
+    background:var(--grad-orange);font-size:.8rem;font-weight:800;box-shadow:var(--glow-orange);
+}
+.trend-info h3{
+    font-family:'Plus Jakarta Sans',var(--font);font-size:clamp(1.9rem,3.4vw,2.9rem);font-weight:800;
+    letter-spacing:-1px;line-height:1.05;margin:14px 0 8px;
+}
+.trend-desc{color:rgba(255,255,255,.84);font-size:1rem;max-width:460px;}
+.trend-stats{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 20px;}
+.trend-stats span{
+    display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;font-size:.84rem;font-weight:600;
+    background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+}
+.trend-stats .is-live{background:rgba(31,165,107,.28);border-color:rgba(53,214,140,.6);}
+.trend-stats .is-live::before{
+    content:"";width:8px;height:8px;border-radius:50%;background:#35d68c;animation:trendPulse 1.6s ease-in-out infinite;
+}
+.trend-play{
+    display:inline-flex;align-items:center;gap:9px;min-height:50px;padding:0 28px;border:0;border-radius:14px;cursor:pointer;
+    background:var(--grad-orange);color:#fff;font:800 1.02rem var(--font);box-shadow:var(--glow-orange);
+    transition:transform .15s var(--ease),filter .15s;
+}
+.trend-play:hover{transform:translateY(-2px);filter:brightness(1.06);}
+.trend-art img{
+    display:block;width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:18px;
+    border:1px solid rgba(255,255,255,.18);box-shadow:0 22px 50px rgba(0,0,0,.45);
+}
+
+.trend-thumbs{display:flex;gap:10px;margin-top:14px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 6px;}
+.trend-thumbs::-webkit-scrollbar{display:none;}
+.trend-thumb{
+    flex:0 0 auto;display:flex;align-items:center;gap:9px;padding:6px 14px 6px 6px;cursor:pointer;
+    border-radius:14px;border:1px solid var(--border);background:var(--surface);color:var(--text);
+    font:700 .85rem var(--font);transition:border-color .15s,box-shadow .15s,transform .15s var(--ease);
+}
+.trend-thumb:hover{transform:translateY(-1px);}
+.trend-thumb img{width:48px;height:30px;object-fit:cover;border-radius:8px;}
+.trend-thumb b{color:var(--orange);}
+.trend-thumb .tdot{width:7px;height:7px;border-radius:50%;background:#35d68c;}
+.trend-thumb[aria-selected="true"]{border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,106,42,.22);}
+.trend-arrow:focus-visible,.trend-play:focus-visible,.trend-thumb:focus-visible,.trend-track:focus-visible{
+    outline:3px solid var(--sun);outline-offset:3px;
+}
+@keyframes trendPulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+
+@media (max-width:768px){
+    .trending{padding:6px 16px 8px;}
+    .trend-title{font-size:1.2rem;}
+    .trend-arrow{width:38px;height:38px;}
+    .trend-slide{grid-template-columns:1fr;gap:16px;min-height:0;padding:16px 16px 20px;align-items:start;}
+    .trend-art{order:-1;}
+    .trend-art img{border-radius:14px;}
+    .trend-info h3{margin:10px 0 6px;}
+    .trend-desc{font-size:.92rem;}
+    .trend-stats{margin:12px 0 16px;}
+    .trend-play{width:100%;justify-content:center;}
+}
+@media (prefers-reduced-motion:reduce){
+    .trend-live i,.trend-stats .is-live::before{animation:none;}
+    .trend-track{scroll-behavior:auto;}
+}

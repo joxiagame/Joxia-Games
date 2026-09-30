@@ -5,6 +5,9 @@
    Réutilise la connexion du hub (même domaine). Si le joueur n'est pas
    connecté, rien n'est enregistré. Seul le temps où l'onglet est visible compte.
    Données : playing/{uid} (jeu en cours) et playtime/{uid} (cumuls).
+   Tendances (lecture publique, carrousel du hub) : live/{JEU}/{uid} (en jeu
+   maintenant) et stats/{JEU}/d/{AAAAMMJJ} (secondes jouées ce jour-là, UTC).
+   Ces écritures sont séparées : si les règles les refusent, le reste marche.
    ============================================================ */
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -22,6 +25,7 @@ const firebaseConfig = {
 const HUB = 'https://joxiagame.github.io/Joxia-Games/';
 const GAME = (new URL(import.meta.url).searchParams.get('game') || 'UNKNOWN').replace(/[.#$[\]/]/g, '_');
 const FLUSH_MS = 15000;
+const dayKey = () => new Date().toISOString().slice(0, 10).replace(/-/g, '');  // AAAAMMJJ (UTC)
 
 // L'app « [DEFAULT] » partage la session enregistrée par le hub sur ce domaine.
 const app = getApps().find(a => a.name === '[DEFAULT]') || initializeApp(firebaseConfig);
@@ -49,15 +53,19 @@ function flush() {
         [`playtime/${uid}/lastGame`]: GAME,
         [`playtime/${uid}/lastAt`]: serverTimestamp(),
     }).catch(() => {});
+    // agrégat public anonyme pour les tendances (plafonné, comme le vérifient les règles)
+    update(ref(db), { [`stats/${GAME}/d/${dayKey()}`]: increment(Math.min(s, 120)) }).catch(() => {});
 }
 function setPlaying(on) {
     if (!uid) return;
-    const r = ref(db, `playing/${uid}`);
+    const r = ref(db, `playing/${uid}`), l = ref(db, `live/${GAME}/${uid}`);
     if (on && !blocked) {
         set(r, { game: GAME, since: serverTimestamp() }).catch(() => {});
         onDisconnect(r).remove().catch(() => {});
+        set(l, serverTimestamp()).then(() => onDisconnect(l).remove()).catch(() => {});
     } else {
         remove(r).catch(() => {});
+        remove(l).catch(() => {});
     }
 }
 
@@ -106,6 +114,7 @@ onAuthStateChanged(auth, user => {
     uid = user ? user.uid : null;
     if (!uid) return;
     update(ref(db), { [`playtime/${uid}/games/${GAME}/sessions`]: increment(1) }).catch(() => {});
+    update(ref(db), { [`stats/${GAME}/plays`]: increment(1) }).catch(() => {});
     pending = 0; lastTick = Date.now();
     if (visible) setPlaying(true);
     timer = setInterval(flush, FLUSH_MS);
