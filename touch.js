@@ -8,8 +8,10 @@
    Options (attributs data-* de la balise script) :
      data-quit      position du bouton « Quitter » : tl | tr | bl | br (défaut tl)
      data-pad       croix directionnelle : dpad (8 directions) | dpad4 (4 directions) | none (défaut)
-     data-buttons   boutons d'action « Code:Libellé » séparés par des virgules (ex. KeyZ:A,Space:Saut)
+     data-buttons   boutons d'action « Code:Libellé » séparés par des virgules (ex. KeyZ:A,Space:Saut) ;
+                    « Code:Libellé:toggle » = bouton bascule (touche maintenue jusqu'au prochain appui, ex. Ctrl)
      data-buttons-pos  position des boutons : br (défaut, en bas à droite) | tr (en haut à droite)
+                    | mr (colonne compacte au milieu à droite)
      data-fit       sélecteur CSS d'un élément de taille fixe à agrandir/réduire pour tenir à l'écran
      data-viewport  contenu imposé pour <meta name="viewport"> (ex. width=720)
      data-drag-mouse  facteur : un glisser au doigt devient mousemove (movementX/Y) + mousedown/up
@@ -46,8 +48,9 @@
 
     /* ---------- clavier virtuel ---------- */
     var KEYCODES = { ArrowLeft: 37, ArrowUp: 38, ArrowRight: 39, ArrowDown: 40, Space: 32, Enter: 13, Escape: 27,
-        ShiftLeft: 16, ControlLeft: 17, Tab: 9, Backspace: 8 };
-    var KEYNAMES = { Space: ' ', Escape: 'Escape', Enter: 'Enter', ShiftLeft: 'Shift', ControlLeft: 'Control', Tab: 'Tab', Backspace: 'Backspace' };
+        ShiftLeft: 16, ControlLeft: 17, Tab: 9, Backspace: 8, Delete: 46 };
+    var KEYNAMES = { Space: ' ', Escape: 'Escape', Enter: 'Enter', ShiftLeft: 'Shift', ControlLeft: 'Control', Tab: 'Tab', Backspace: 'Backspace',
+        Delete: 'Delete' };
     function keyInfo(code) {
         if (KEYCODES[code]) return { key: KEYNAMES[code] || code, keyCode: KEYCODES[code] };
         var m = /^Key([A-Z])$/.exec(code);
@@ -67,7 +70,11 @@
         Object.defineProperty(ev, 'which', { get: function () { return k.keyCode; } });
         (document.activeElement && document.activeElement !== document.documentElement ? document.activeElement : document.body || document).dispatchEvent(ev);
     }
-    function releaseAll() { Object.keys(held).forEach(function (c) { sendKey('keyup', c); }); }
+    function releaseAll() {
+        Object.keys(held).forEach(function (c) { sendKey('keyup', c); });
+        var on = document.querySelectorAll('#joxia-btns button.on');
+        for (var i = 0; i < on.length; i++) { on[i].classList.remove('on'); on[i].setAttribute('aria-pressed', 'false'); }
+    }
 
     /* ---------- styles ---------- */
     var css = '' +
@@ -97,6 +104,8 @@
         '#joxia-btns button{min-width:64px;height:64px;padding:0 10px;border-radius:32px;border:2px solid rgba(255,255,255,.35);' +
         'background:rgba(20,22,30,.45);color:#fff;font:700 13px system-ui,sans-serif;touch-action:none}' +
         '#joxia-btns button.on{background:rgba(255,138,61,.75);border-color:#ffb347}' +
+        '#joxia-btns.mr{bottom:auto;top:50%;transform:translateY(-50%);flex-direction:column;flex-wrap:nowrap;gap:8px;max-width:none}' +
+        '#joxia-btns.mr button{min-width:0;width:auto;height:44px;border-radius:22px;padding:0 12px;font-size:12px}' +
         '.joxia-fit{position:fixed!important;left:0!important;top:0!important;margin:0!important;transform-origin:0 0}' +
         (fitSel ? 'html,body{overflow:hidden!important;overscroll-behavior:none}' : '');
 
@@ -161,13 +170,24 @@
             var box = document.createElement('div');
             box.id = 'joxia-btns'; box.className = 'joxia-pad ' + opt('buttons-pos', 'br');
             list.split(',').forEach(function (item) {
-                var p = item.split(':'), code = p[0].trim(), label = (p[1] || code).trim();
+                var p = item.split(':'), code = p[0].trim(), label = (p[1] || code).trim(), toggle = (p[2] || '').trim() === 'toggle';
                 if (!code) return;
                 var b = document.createElement('button');
                 b.type = 'button'; b.textContent = label; b.setAttribute('aria-label', label);
-                var up = function () { b.classList.remove('on'); sendKey('keyup', code); };
-                b.addEventListener('pointerdown', function (e) { e.preventDefault(); e.stopPropagation(); b.setPointerCapture(e.pointerId); b.classList.add('on'); sendKey('keydown', code); });
-                b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up);
+                if (toggle) {
+                    // bascule : 1er appui = touche enfoncée (reste allumé), 2e appui = relâchée
+                    b.setAttribute('aria-pressed', 'false');
+                    b.addEventListener('pointerdown', function (e) {
+                        e.preventDefault(); e.stopPropagation();
+                        var on = !b.classList.contains('on');
+                        b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on));
+                        sendKey(on ? 'keydown' : 'keyup', code);
+                    });
+                } else {
+                    var up = function () { b.classList.remove('on'); sendKey('keyup', code); };
+                    b.addEventListener('pointerdown', function (e) { e.preventDefault(); e.stopPropagation(); b.setPointerCapture(e.pointerId); b.classList.add('on'); sendKey('keydown', code); });
+                    b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up);
+                }
                 b.addEventListener('touchstart', function (e) { e.preventDefault(); e.stopPropagation(); }, { passive: false });
                 box.appendChild(b);
             });
