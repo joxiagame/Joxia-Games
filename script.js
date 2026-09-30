@@ -82,6 +82,7 @@ const GAME_LABELS = {
     'Snake': 'Snake', 'Flappy': 'Flappy', 'TETRIS': 'Tetris',
     'BallBlast': 'Ball Blast', 'BRICK_BLAST': 'Brick Blast', '2048': '2048',
     'PACMAN': 'Pac-Man', 'CODEBREAKER': 'Codebreaker', 'CRYPTO': 'Crypto Tycoon',
+    'POOL': 'Billard',
 };
 const lbTabs = el('lbTabs');
 const lbContent = el('leaderboardContent');
@@ -857,6 +858,7 @@ const GAMES = [
     { name: 'Pac-Man Joxia',     image: 'Pac-Man.png',        tags: ['Arcade', 'Labyrinthe'],  url: 'https://joxiagame.github.io/Pacman-Joxia/', isNew: true },
     { name: 'Codebreaker Joxia', image: 'Codebreaker.webp',   tags: ['Puzzle', 'Décodage'],    url: 'https://joxiagame.github.io/Codebreaker-Joxia/', isNew: true },
     { name: 'Crypto Tycoon Joxia', image: 'Crypto Tycoon.png', tags: ['Stratégie', 'Trading'], url: 'https://joxiagame.github.io/Crypto-Tycoon-Joxia/', isNew: true },
+    { name: 'Billard Joxia',       image: 'Billard.png',        tags: ['Sport', '8-ball'],       url: 'https://joxiagame.github.io/Pool-Joxia/', isNew: true },
 ];
 
 let showAll = false;
