@@ -551,6 +551,10 @@ async function purgeOrphans(uids) {
         const updates = {};
         ['users', 'presence', 'playing', 'playtime'].forEach(n => { updates[`${n}/${uid}`] = null; });
         try { await update(ref(db), updates); ok++; } catch (err) { /* refusé par les règles */ }
+        // classement public du temps de jeu (à part : un refus ne bloque pas le reste)
+        const rt = {};
+        Object.keys(PLAY_LABELS).forEach(g => { rt[`ranktime/${g}/${uid}`] = null; });
+        update(ref(db), rt).catch(() => {});
     }
     if (uids.includes(state.drawerUid)) closeDrawer();
     if (ok === uids.length) toast(`${ok} fiche(s) orpheline(s) supprimée(s)`);

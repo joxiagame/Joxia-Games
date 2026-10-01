@@ -55,6 +55,8 @@ function flush() {
     }).catch(() => {});
     // agrégat public anonyme pour les tendances (plafonné, comme le vérifient les règles)
     update(ref(db), { [`stats/${GAME}/d/${dayKey()}`]: increment(Math.min(s, 120)) }).catch(() => {});
+    // classement public du temps de jeu : secondes seules (ni dates ni dernier jeu), plafonné comme stats
+    update(ref(db), { [`ranktime/${GAME}/${uid}`]: increment(Math.min(s, 120)) }).catch(() => {});
 }
 function setPlaying(on) {
     if (!uid) return;
