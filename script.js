@@ -84,12 +84,39 @@ const GAME_LABELS = {
     'PACMAN': 'Pac-Man', 'CODEBREAKER': 'Codebreaker', 'CRYPTO': 'Crypto Tycoon',
     'POOL': 'Billard',
 };
+// Jeux tiers : ce que mesure leur score (envoyé par window.joxiaScore de tracker.js).
+// asc = le plus petit gagne ; ms = temps en millisecondes ; time = classé au temps de jeu (ranktime).
+const SCORE_META = {
+    HEXTRIS: { what: 'Meilleur score', unit: 'pts' },
+    POND: { what: 'Barres de niveau remplies', unit: 'niv.' },
+    DRAKONAS: { what: 'Score total des missions', unit: 'pts' },
+    RAGINGGARDENS: { what: 'Carottes récoltées en une partie', unit: '🥕' },
+    DRUNKENVIKING: { what: 'Jours terminés', unit: 'jours' },
+    TOWERDEFENSE: { what: 'Points gagnés en une partie', unit: 'pts' },
+    SURVIVOR: { what: 'Ennemis éliminés en une partie', unit: 'élim.' },
+    HEXGL: { what: 'Meilleur temps de course (le plus rapide gagne)', asc: true, ms: true },
+    PARTICLECLICKER: { what: 'Réputation du labo', unit: 'réput.' },
+    ADARKROOM: { what: 'Score officiel du jeu', unit: 'pts' },
+    '3DCITY': { what: 'Population de la ville', unit: 'hab.' },
+    SHAPEZ: { what: 'Niveaux terminés', unit: 'niv.' },
+    MINDUSTRY: { what: 'Meilleure vague atteinte', unit: 'vagues' },
+    INFINITECRAFT: { what: 'Éléments découverts', unit: 'éléments' },
+    SANDSPIEL: { what: 'Bac à sable sans score : classé au temps passé à créer', time: true },
+};
+const fmtScore = (g, v) => {
+    const m = SCORE_META[g];
+    if (m && m.ms) {  // 83456 → 1:23.45
+        const min = Math.floor(v / 60000), s = Math.floor(v / 1000) % 60, cs = Math.floor(v / 10) % 100;
+        return `${min}:${String(s).padStart(2, '0')}.${String(cs).padStart(2, '0')}`;
+    }
+    return Number(v).toLocaleString('fr-FR') + (m && m.unit ? ' ' + m.unit : '');
+};
 const lbTabs = el('lbTabs');
 const lbContent = el('leaderboardContent');
 let lbData = null;
 let lbActive = '__global__';
 
-const gameLabel = key => GAME_LABELS[key] || key;
+const gameLabel = key => GAME_LABELS[key] || (CATALOG[key] && CATALOG[key].name) || key;
 
 async function loadLeaderboard() {
     lbContent.innerHTML = '<p class="empty">Chargement des scores…</p>';
@@ -119,7 +146,8 @@ async function loadLeaderboard() {
                 if (e.uid) identity = e.uid;
                 else if (rawName) identity = usernames[rawName.toLowerCase()] || null;
                 if (!identity) continue;
-                if (!(identity in best) || score > best[identity]) best[identity] = score;
+                const asc = SCORE_META[gameKey] && SCORE_META[gameKey].asc;
+                if (!(identity in best) || (asc ? score < best[identity] : score > best[identity])) best[identity] = score;
             }
             perGame[gameKey] = best;
             gameOrder.push(gameKey);
@@ -132,9 +160,11 @@ async function loadLeaderboard() {
             return { name: p.displayName || p.username || 'Joueur', avatar: p.avatar || null };
         };
 
-        // 3) Classement global (somme des meilleurs scores par jeu)
+        // 3) Classement global (somme des meilleurs scores des mini-jeux maison ;
+        //    les jeux tiers ont des échelles trop différentes : temps, population…)
         const globalMap = {};
         for (const g of gameOrder) {
+            if (SCORE_META[g]) continue;
             for (const id in perGame[g]) {
                 if (!globalMap[id]) globalMap[id] = { identity: id, total: 0 };
                 globalMap[id].total += perGame[g][id];
@@ -149,7 +179,7 @@ async function loadLeaderboard() {
         for (const g of gameOrder) {
             perGameList[g] = Object.keys(perGame[g])
                 .map(id => Object.assign({ identity: id, score: perGame[g][id] }, info(id)))
-                .sort((a, b) => b.score - a.score);
+                .sort((a, b) => (SCORE_META[g] && SCORE_META[g].asc) ? a.score - b.score : b.score - a.score);
         }
 
         // 5) Temps de jeu (tous les jeux, y compris les jeux tiers sans score).
@@ -179,19 +209,32 @@ async function loadLeaderboard() {
     }
 }
 
-// Onglets en deux groupes : scores (mini-jeux maison) et temps de jeu (tous les jeux,
-// dont les jeux tiers qui n'enregistrent pas de score). Clé « t:<ID> » = temps d'un jeu.
+// Onglets : sélecteur « Scores / Temps de jeu », puis une rangée de jeux qui défile.
+// Scores = mini-jeux maison + jeux tiers (window.joxiaScore). Temps = ranktime, clé « t:<ID> ».
 function buildLbTabs() {
+    const timeMode = lbActive.indexOf('t:') === 0;
     const scoreTabs = [{ key: '__global__', label: 'Global' }].concat(
-        (lbData ? lbData.games : []).map(g => ({ key: g, label: gameLabel(g) }))
+        (lbData ? lbData.games : []).filter(g => !SCORE_META[g]).map(g => ({ key: g, label: gameLabel(g) })),
+        EXTERNAL_GAMES.filter(g => SCORE_META[g.id]).map(g => ({ key: g.id, label: g.name }))
     );
     const timeTabs = [{ key: 't:__all__', label: 'Tous les jeux' }].concat(
         EXTERNAL_GAMES.map(g => ({ key: 't:' + g.id, label: g.name }))
     );
     const tab = t => `<button class="lb-tab${t.key === lbActive ? ' active' : ''}" data-game="${t.key}" role="tab" aria-selected="${t.key === lbActive}">${escapeHtml(t.label)}</button>`;
     lbTabs.innerHTML =
-        `<div class="lb-group"><span class="lb-group-label">🏆 Meilleurs scores</span>${scoreTabs.map(tab).join('')}</div>` +
-        `<div class="lb-group"><span class="lb-group-label">⏱ Temps de jeu</span>${timeTabs.map(tab).join('')}</div>`;
+        `<div class="lb-mode" role="group" aria-label="Type de classement">
+            <button class="lb-mode-btn${timeMode ? '' : ' active'}" data-game="__global__" aria-pressed="${!timeMode}">🏆 Scores</button>
+            <button class="lb-mode-btn${timeMode ? ' active' : ''}" data-game="t:__all__" aria-pressed="${timeMode}">⏱ Temps de jeu</button>
+        </div>
+        <div class="lb-row-tabs">${(timeMode ? timeTabs : scoreTabs).map(tab).join('')}</div>`;
+    lbTabs.querySelectorAll('.lb-mode-btn').forEach(b => b.onclick = () => {
+        if (b.classList.contains('active')) return;
+        lbActive = b.dataset.game;
+        buildLbTabs();
+        renderLeaderboard();
+    });
+    const act = lbTabs.querySelector('.lb-tab.active');
+    if (act) act.scrollIntoView({ block: 'nearest', inline: 'center' });
     lbTabs.querySelectorAll('.lb-tab').forEach(b => b.onclick = () => {
         lbActive = b.dataset.game;
         buildLbTabs();
@@ -217,7 +260,7 @@ function lbRow(item, i, scoreKey) {
         <span class="lb-rank">${medal(i)}</span>
         ${avatar}
         <span class="lb-name">${escapeHtml(item.name)} ${you}</span>
-        <span class="lb-score">${scoreKey === 'seconds' ? fmtPlayed(item.seconds) : item[scoreKey]}</span>
+        <span class="lb-score">${scoreKey === 'seconds' ? fmtPlayed(item.seconds) : scoreKey === 'score' && SCORE_META[lbActive] ? fmtScore(lbActive, item.score) : item[scoreKey]}</span>
     </div>`;
 }
 
@@ -233,12 +276,18 @@ function renderLeaderboard() {
                 : '<p class="empty">Le classement du temps de jeu n\'est pas encore activé.</p>';
         return;
     }
+    const meta = SCORE_META[lbActive];
     const list = lbActive === '__global__'
         ? lbData.globList.map((it, i) => lbRow(it, i, 'total'))
-        : (lbData.perGameList[lbActive] || []).map((it, i) => lbRow(it, i, 'score'));
-    lbContent.innerHTML = list.length
+        : meta && meta.time
+            ? (lbData.timeList[lbActive] || []).map((it, i) => lbRow(it, i, 'seconds'))
+            : (lbData.perGameList[lbActive] || []).map((it, i) => lbRow(it, i, 'score'));
+    const hint = lbActive === '__global__'
+        ? '<p class="lb-hint">Somme des meilleurs scores des mini-jeux Joxia</p>'
+        : meta ? `<p class="lb-hint">${escapeHtml(meta.what)}</p>` : '';
+    lbContent.innerHTML = hint + (list.length
         ? list.join('')
-        : '<p class="empty">Aucun score pour l\'instant. Joue pour apparaître ici !</p>';
+        : '<p class="empty">Aucun score pour l\'instant. Joue (connecté) pour apparaître ici !</p>');
 }
 
 // Recopie le temps déjà joué (playtime privé du joueur) dans le classement public

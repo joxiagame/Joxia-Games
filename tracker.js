@@ -8,10 +8,15 @@
    Tendances (lecture publique, carrousel du hub) : live/{JEU}/{uid} (en jeu
    maintenant) et stats/{JEU}/d/{AAAAMMJJ} (secondes jouées ce jour-là, UTC).
    Ces écritures sont séparées : si les règles les refusent, le reste marche.
+   Scores (classement du hub) : games/{JEU}/scores/{uid} = { name, score } (meilleur score
+   seulement, même format que les mini-jeux maison). Depuis le jeu :
+     window.joxiaScore && window.joxiaScore(points)            // fin de partie
+     window.joxiaScore.watch(() => niveau, 5000)              // progression lue en continu
+   ?order=asc dans l'URL du script = le plus petit gagne (ex. temps au tour).
    ============================================================ */
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getDatabase, ref, set, update, remove, onValue, onDisconnect, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, get, set, update, remove, onValue, onDisconnect, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCPecKQH6DURfYitjY4bXMeW0URLrcNnsI",
@@ -25,6 +30,7 @@ const firebaseConfig = {
 const HUB = 'https://joxiagame.github.io/Joxia-Games/';
 const GAME = (new URL(import.meta.url).searchParams.get('game') || 'UNKNOWN').replace(/[.#$[\]/]/g, '_');
 const FLUSH_MS = 15000;
+const SCORE_ASC = new URL(import.meta.url).searchParams.get('order') === 'asc';
 const dayKey = () => new Date().toISOString().slice(0, 10).replace(/-/g, '');  // AAAAMMJJ (UTC)
 
 // L'app « [DEFAULT] » partage la session enregistrée par le hub sur ce domaine.
@@ -32,7 +38,7 @@ const app = getApps().find(a => a.name === '[DEFAULT]') || initializeApp(firebas
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-let uid = null, pending = 0, lastTick = 0, timer = null, suspUnsub = null, suspTimer = null, blocked = false;
+let uid = null, username = null, pending = 0, lastTick = 0, timer = null, suspUnsub = null, suspTimer = null, blocked = false;
 let visible = document.visibilityState === 'visible';
 
 // Cumule le temps visible écoulé depuis le dernier passage.
@@ -107,6 +113,41 @@ function watchSuspension() {
     }, () => {});
 }
 
+/* ---------- scores (classement du hub) ---------- */
+// Meilleur score par joueur : games/{JEU}/scores/{uid} = { name, score }, comme les mini-jeux maison.
+// On n'écrit que si le score bat le record enregistré ; hors connexion, rien n'est envoyé.
+let scoreBest = null, scorePending = null, scoreWant = null, scoreTimer = null, scoreBusy = false;
+const better = (a, b) => b === null || b === undefined || (SCORE_ASC ? a < b : a > b);
+function submitScore(value) {
+    const v = Math.round(Number(value));
+    if (!isFinite(v) || v <= 0 || v > 1e12 || blocked) return;
+    if (!uid || !username) { if (better(v, scorePending)) scorePending = v; return; }
+    if (!better(v, scoreBest) || !better(v, scoreWant)) return;
+    // regroupé : un jeu qui marque à chaque ennemi n'écrit qu'une fois toutes les 3 s
+    scoreWant = v;
+    if (!scoreTimer) scoreTimer = setTimeout(flushScore, 3000);
+}
+async function flushScore() {
+    clearTimeout(scoreTimer); scoreTimer = null;
+    if (scoreBusy || scoreWant === null || !uid || !username) return;
+    const v = scoreWant, me = uid; scoreWant = null; scoreBusy = true;
+    try {
+        const r = ref(db, `games/${GAME}/scores/${me}`);
+        const cur = (await get(r)).val();
+        const old = cur && Number(cur.score);
+        if (old && !better(v, old)) scoreBest = old;
+        else { await set(r, { name: username, score: v }); scoreBest = v; }
+    } catch (e) { /* refusé ou hors ligne */ }
+    scoreBusy = false;
+    if (scoreWant !== null) scoreTimer = setTimeout(flushScore, 3000);
+}
+addEventListener('pagehide', flushScore);
+window.joxiaScore = submitScore;
+// Progression lue régulièrement (niveau, vague, population…) : envoyée quand elle s'améliore.
+window.joxiaScore.watch = (getter, ms) => setInterval(() => {
+    try { const v = getter(); if (v) submitScore(v); } catch (e) { /* jeu pas encore prêt */ }
+}, ms || 5000);
+
 /* ---------- cycle de vie ---------- */
 onAuthStateChanged(auth, user => {
     if (uid) { flush(); setPlaying(false); }
@@ -114,7 +155,9 @@ onAuthStateChanged(auth, user => {
     clearInterval(timer); clearTimeout(suspTimer);
     blocked = false; showBlock(null);
     uid = user ? user.uid : null;
+    username = user && user.email ? user.email.split('@')[0] : null;
     if (!uid) return;
+    if (scorePending !== null) { const v = scorePending; scorePending = null; submitScore(v); }
     update(ref(db), { [`playtime/${uid}/games/${GAME}/sessions`]: increment(1) }).catch(() => {});
     update(ref(db), { [`stats/${GAME}/plays`]: increment(1) }).catch(() => {});
     pending = 0; lastTick = Date.now();
