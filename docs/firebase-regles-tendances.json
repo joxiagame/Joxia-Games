@@ -1,6 +1,5 @@
 {
-  "_LISEZMOI": "À fusionner dans joxia-admin/database.rules.json (sous \"rules\"), puis : node rules.js test && node rules.js deploy. Chemins utilisés par tracker.js (écriture) et le carrousel « Tendances » du hub (lecture).",
-
+  "_LISEZMOI": "À fusionner dans joxia-admin/database.rules.json (sous \"rules\"), puis : node rules.js test && node rules.js deploy. Chemins utilisés par tracker.js (écriture), le carrousel « Tendances » et le classement « Temps de jeu » du hub (lecture).",
   "live": {
     ".read": true,
     "$game": {
@@ -10,7 +9,6 @@
       }
     }
   },
-
   "stats": {
     ".read": true,
     "$game": {
@@ -25,7 +23,19 @@
           ".validate": "$day.matches(/^20[0-9]{6}$/) && newData.isNumber() && newData.val() > (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 120"
         }
       },
-      "$other": { ".validate": false }
+      "$other": {
+        ".validate": false
+      }
+    }
+  },
+  "ranktime": {
+    ".read": true,
+    "$game": {
+      ".validate": "$game.matches(/^[A-Z0-9_]{1,32}$/)",
+      "$uid": {
+        ".write": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).val() === true)",
+        ".validate": "newData.isNumber() && newData.val() >= (data.exists() ? data.val() : 0) && (newData.val() <= (data.exists() ? data.val() : 0) + 120 || newData.val() <= (root.child('playtime').child($uid).child('games').child($game).child('seconds').exists() ? root.child('playtime').child($uid).child('games').child($game).child('seconds').val() : 0) + 120)"
+      }
     }
   }
 }

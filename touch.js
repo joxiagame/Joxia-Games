@@ -6,7 +6,7 @@
              data-pad="dpad" data-buttons="Space:Tir,KeyP:Pause"></script>
 
    Options (attributs data-* de la balise script) :
-     data-quit      position du bouton « Quitter » : tl | tr | bl | br (défaut tl)
+     data-quit      position du bouton « Quitter » : tl | tr | bl | br | tc | bc (défaut tl ; tc/bc = centré)
      data-pad       croix directionnelle : dpad (8 directions) | dpad4 (4 directions) | none (défaut)
      data-buttons   boutons d'action « Code:Libellé » séparés par des virgules (ex. KeyZ:A,Space:Saut) ;
                     « Code:Libellé:toggle » = bouton bascule (touche maintenue jusqu'au prochain appui, ex. Ctrl)
@@ -86,6 +86,8 @@
         '#joxia-quit.tr{top:calc(8px + env(safe-area-inset-top));right:calc(8px + env(safe-area-inset-right))}' +
         '#joxia-quit.bl{bottom:calc(8px + env(safe-area-inset-bottom));left:calc(8px + env(safe-area-inset-left))}' +
         '#joxia-quit.br{bottom:calc(8px + env(safe-area-inset-bottom));right:calc(8px + env(safe-area-inset-right))}' +
+        '#joxia-quit.tc{top:calc(8px + env(safe-area-inset-top));left:50%;transform:translateX(-50%)}' +
+        '#joxia-quit.bc{bottom:calc(8px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%)}' +
         '.joxia-pad{position:fixed;z-index:2147483646;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;' +
         '-webkit-tap-highlight-color:transparent}' +
         '#joxia-dpad{left:calc(18px + env(safe-area-inset-left));bottom:calc(18px + env(safe-area-inset-bottom));width:132px;height:132px;' +

@@ -94,8 +94,10 @@ const gameLabel = key => GAME_LABELS[key] || key;
 async function loadLeaderboard() {
     lbContent.innerHTML = '<p class="empty">Chargement des scores…</p>';
     try {
-        const [gamesSnap, usersSnap, usernamesSnap] = await Promise.all([
+        const [gamesSnap, usersSnap, usernamesSnap, timeSnap] = await Promise.all([
             get(ref(db, 'games')), get(ref(db, 'users')), get(ref(db, 'usernames')),
+            // temps de jeu public (ranktime/{JEU}/{uid}) : absent si les règles ne l'ouvrent pas encore
+            get(ref(db, 'ranktime')).catch(() => null),
         ]);
         const games = gamesSnap.val() || {};
         const users = usersSnap.val() || {};
@@ -150,7 +152,26 @@ async function loadLeaderboard() {
                 .sort((a, b) => b.score - a.score);
         }
 
-        lbData = { globList, perGameList, games: gameOrder };
+        // 5) Temps de jeu (tous les jeux, y compris les jeux tiers sans score).
+        //    Seuls les comptes existants comptent (un compte supprimé disparaît du classement).
+        const ranktime = (timeSnap && timeSnap.val()) || {};
+        const timeTotal = {};
+        const timeList = {};
+        for (const g in ranktime) {
+            const rows = [];
+            for (const id in ranktime[g] || {}) {
+                const sec = Number(ranktime[g][id]) || 0;
+                if (sec < 1 || !users[id]) continue;
+                rows.push(Object.assign({ identity: id, seconds: sec }, info(id)));
+                timeTotal[id] = (timeTotal[id] || 0) + sec;
+            }
+            timeList[g] = rows.sort((a, b) => b.seconds - a.seconds);
+        }
+        timeList.__all__ = Object.keys(timeTotal)
+            .map(id => Object.assign({ identity: id, seconds: timeTotal[id] }, info(id)))
+            .sort((a, b) => b.seconds - a.seconds);
+
+        lbData = { globList, perGameList, games: gameOrder, timeList, timeReady: !!timeSnap };
         buildLbTabs();
         renderLeaderboard();
     } catch (e) {
@@ -158,13 +179,19 @@ async function loadLeaderboard() {
     }
 }
 
+// Onglets en deux groupes : scores (mini-jeux maison) et temps de jeu (tous les jeux,
+// dont les jeux tiers qui n'enregistrent pas de score). Clé « t:<ID> » = temps d'un jeu.
 function buildLbTabs() {
-    const tabs = [{ key: '__global__', label: 'Global' }].concat(
+    const scoreTabs = [{ key: '__global__', label: 'Global' }].concat(
         (lbData ? lbData.games : []).map(g => ({ key: g, label: gameLabel(g) }))
     );
-    lbTabs.innerHTML = tabs.map(t =>
-        `<button class="lb-tab${t.key === lbActive ? ' active' : ''}" data-game="${t.key}" role="tab" aria-selected="${t.key === lbActive}">${t.label}</button>`
-    ).join('');
+    const timeTabs = [{ key: 't:__all__', label: 'Tous les jeux' }].concat(
+        EXTERNAL_GAMES.map(g => ({ key: 't:' + g.id, label: g.name }))
+    );
+    const tab = t => `<button class="lb-tab${t.key === lbActive ? ' active' : ''}" data-game="${t.key}" role="tab" aria-selected="${t.key === lbActive}">${escapeHtml(t.label)}</button>`;
+    lbTabs.innerHTML =
+        `<div class="lb-group"><span class="lb-group-label">🏆 Meilleurs scores</span>${scoreTabs.map(tab).join('')}</div>` +
+        `<div class="lb-group"><span class="lb-group-label">⏱ Temps de jeu</span>${timeTabs.map(tab).join('')}</div>`;
     lbTabs.querySelectorAll('.lb-tab').forEach(b => b.onclick = () => {
         lbActive = b.dataset.game;
         buildLbTabs();
@@ -190,18 +217,44 @@ function lbRow(item, i, scoreKey) {
         <span class="lb-rank">${medal(i)}</span>
         ${avatar}
         <span class="lb-name">${escapeHtml(item.name)} ${you}</span>
-        <span class="lb-score">${item[scoreKey]}</span>
+        <span class="lb-score">${scoreKey === 'seconds' ? fmtPlayed(item.seconds) : item[scoreKey]}</span>
     </div>`;
 }
 
 function renderLeaderboard() {
     if (!lbData) return;
+    if (lbActive.indexOf('t:') === 0) {
+        const id = lbActive.slice(2);
+        const rows = (lbData.timeList[id] || []).map((it, i) => lbRow(it, i, 'seconds'));
+        const name = id === '__all__' ? 'Joxia' : ((CATALOG[id] && CATALOG[id].name) || id);
+        lbContent.innerHTML = rows.length ? rows.join('')
+            : lbData.timeReady
+                ? `<p class="empty">Personne n'a encore de temps de jeu sur ${escapeHtml(name)}. Lance une partie (connecté) pour ouvrir le classement !</p>`
+                : '<p class="empty">Le classement du temps de jeu n\'est pas encore activé.</p>';
+        return;
+    }
     const list = lbActive === '__global__'
         ? lbData.globList.map((it, i) => lbRow(it, i, 'total'))
-        : lbData.perGameList[lbActive].map((it, i) => lbRow(it, i, 'score'));
+        : (lbData.perGameList[lbActive] || []).map((it, i) => lbRow(it, i, 'score'));
     lbContent.innerHTML = list.length
         ? list.join('')
         : '<p class="empty">Aucun score pour l\'instant. Joue pour apparaître ici !</p>';
+}
+
+// Recopie le temps déjà joué (playtime privé du joueur) dans le classement public
+// ranktime, pour que les parties d'avant l'ouverture du classement comptent.
+// Les règles n'autorisent qu'une valeur ≤ playtime (+120 s) : pas de triche possible.
+async function syncRankTime(uid) {
+    try {
+        const games = (await get(ref(db, `playtime/${uid}/games`))).val() || {};
+        for (const g in games) {
+            const sec = Math.floor(Number(games[g] && games[g].seconds) || 0);
+            if (sec < 1 || !/^[A-Z0-9_]{1,32}$/.test(g)) continue;
+            const r = ref(db, `ranktime/${g}/${uid}`);
+            const cur = Number((await get(r)).val()) || 0;
+            if (cur < sec) await set(r, sec).catch(() => {});
+        }
+    } catch (e) { /* règles pas encore déployées : sans effet */ }
 }
 
 const rankBtn = el('rankBtn');
@@ -1270,6 +1323,7 @@ onAuthStateChanged(auth, async (user) => {
         });
         attachFriendsListeners(user.uid);
         attachChatListeners(user.uid);
+        syncRankTime(user.uid);
     } else {
         profile = null;
         unwatchSuspension();
