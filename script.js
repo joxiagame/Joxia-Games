@@ -82,8 +82,13 @@ const GAME_LABELS = {
     'Snake': 'Snake', 'Flappy': 'Flappy', 'FLAPPY_BIRD': 'Flappy', 'TETRIS': 'Tetris',
     'BallBlast': 'Ball Blast', 'BRICK_BLAST': 'Brick Blast', '2048': '2048',
     'PACMAN': 'Pac-Man', 'CODEBREAKER': 'Codebreaker', 'CRYPTO': 'Crypto Tycoon',
-    'POOL': 'Billard',
+    'POOL': 'Billard', 'CRYPTO_V2': 'Crypto Tycoon',
 };
+// Mini-jeux maison à part : CRYPTO = ancienne version (scores archivés, masqués) ;
+// CRYPTO_V2 = fortune record jusqu'à 1 000 Md€, trop grande pour la somme « Global ».
+const HIDDEN_GAMES = new Set(['CRYPTO']);
+const INHOUSE_META = { CRYPTO_V2: { what: 'Fortune record (rangs Bronze → Légende)', money: true, noGlobal: true } };
+const fmtEuro = v => { const a = Math.abs(v); return a >= 1e9 ? (v / 1e9).toFixed(2) + ' Md€' : a >= 1e6 ? (v / 1e6).toFixed(2) + ' M€' : a >= 1e4 ? (v / 1e3).toFixed(1) + ' K€' : Math.round(v).toLocaleString('fr-FR') + ' €'; };
 // Jeux tiers : ce que mesure leur score (envoyé par window.joxiaScore de tracker.js).
 // asc = le plus petit gagne ; ms = temps en millisecondes ; time = classé au temps de jeu (ranktime).
 const SCORE_META = {
@@ -135,6 +140,7 @@ async function loadLeaderboard() {
         const perGame = {};
         const gameOrder = [];
         for (const gameKey in games) {
+            if (HIDDEN_GAMES.has(gameKey)) continue;
             const scores = (games[gameKey] && games[gameKey].scores) || {};
             const best = {};
             for (const k in scores) {
@@ -164,7 +170,7 @@ async function loadLeaderboard() {
         //    les jeux tiers ont des échelles trop différentes : temps, population…)
         const globalMap = {};
         for (const g of gameOrder) {
-            if (SCORE_META[g]) continue;
+            if (SCORE_META[g] || (INHOUSE_META[g] && INHOUSE_META[g].noGlobal)) continue;
             for (const id in perGame[g]) {
                 if (!globalMap[id]) globalMap[id] = { identity: id, total: 0 };
                 globalMap[id].total += perGame[g][id];
@@ -260,7 +266,7 @@ function lbRow(item, i, scoreKey) {
         <span class="lb-rank">${medal(i)}</span>
         ${avatar}
         <span class="lb-name">${escapeHtml(item.name)} ${you}</span>
-        <span class="lb-score">${scoreKey === 'seconds' ? fmtPlayed(item.seconds) : scoreKey === 'score' && SCORE_META[lbActive] ? fmtScore(lbActive, item.score) : item[scoreKey]}</span>
+        <span class="lb-score">${scoreKey === 'seconds' ? fmtPlayed(item.seconds) : scoreKey === 'score' && SCORE_META[lbActive] ? fmtScore(lbActive, item.score) : scoreKey === 'score' && INHOUSE_META[lbActive] && INHOUSE_META[lbActive].money ? fmtEuro(item.score) : item[scoreKey]}</span>
     </div>`;
 }
 
@@ -284,7 +290,8 @@ function renderLeaderboard() {
             : (lbData.perGameList[lbActive] || []).map((it, i) => lbRow(it, i, 'score'));
     const hint = lbActive === '__global__'
         ? '<p class="lb-hint">Somme des meilleurs scores des mini-jeux Joxia</p>'
-        : meta ? `<p class="lb-hint">${escapeHtml(meta.what)}</p>` : '';
+        : meta ? `<p class="lb-hint">${escapeHtml(meta.what)}</p>`
+        : INHOUSE_META[lbActive] ? `<p class="lb-hint">${escapeHtml(INHOUSE_META[lbActive].what)}</p>` : '';
     lbContent.innerHTML = hint + (list.length
         ? list.join('')
         : '<p class="empty">Aucun score pour l\'instant. Joue (connecté) pour apparaître ici !</p>');
