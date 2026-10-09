@@ -273,7 +273,7 @@ function renderLeaderboard() {
         lbContent.innerHTML = rows.length ? rows.join('')
             : lbData.timeReady
                 ? `<p class="empty">Personne n'a encore de temps de jeu sur ${escapeHtml(name)}. Lance une partie (connecté) pour ouvrir le classement !</p>`
-                : '<p class="empty">Le classement du temps de jeu n\'est pas encore activé.</p>';
+                : '<p class="empty">Le classement du temps de jeu n\'est pas encore activé (règles Firebase « ranktime » à déployer).</p>';
         return;
     }
     const meta = SCORE_META[lbActive];

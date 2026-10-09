@@ -148,6 +148,20 @@ window.joxiaScore.watch = (getter, ms) => setInterval(() => {
     try { const v = getter(); if (v) submitScore(v); } catch (e) { /* jeu pas encore prêt */ }
 }, ms || 5000);
 
+/* ---------- classement « Temps de jeu » : rattrapage de l'historique ----------
+   ranktime/{JEU}/{uid} n'existe que depuis l'ouverture du classement : on y recopie le
+   temps déjà cumulé dans playtime (privé, lisible par le joueur lui-même). Les règles
+   refusent toute valeur > playtime + 120 s. */
+async function syncRankTime() {
+    const me = uid;
+    try {
+        const sec = Math.floor(Number((await get(ref(db, `playtime/${me}/games/${GAME}/seconds`))).val()) || 0);
+        if (sec < 1 || me !== uid) return;
+        const r = ref(db, `ranktime/${GAME}/${me}`);
+        if ((Number((await get(r)).val()) || 0) < sec) await set(r, sec);
+    } catch (e) { /* règles ranktime pas encore déployées */ }
+}
+
 /* ---------- cycle de vie ---------- */
 onAuthStateChanged(auth, user => {
     if (uid) { flush(); setPlaying(false); }
@@ -160,6 +174,7 @@ onAuthStateChanged(auth, user => {
     if (scorePending !== null) { const v = scorePending; scorePending = null; submitScore(v); }
     update(ref(db), { [`playtime/${uid}/games/${GAME}/sessions`]: increment(1) }).catch(() => {});
     update(ref(db), { [`stats/${GAME}/plays`]: increment(1) }).catch(() => {});
+    syncRankTime();
     pending = 0; lastTick = Date.now();
     if (visible) setPlaying(true);
     timer = setInterval(flush, FLUSH_MS);
