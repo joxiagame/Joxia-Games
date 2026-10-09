@@ -88,6 +88,13 @@ const GAME_LABELS = {
 // CRYPTO_V2 = fortune record jusqu'à 1 000 Md€, trop grande pour la somme « Global ».
 const HIDDEN_GAMES = new Set(['CRYPTO']);
 const INHOUSE_META = { CRYPTO_V2: { what: 'Fortune record (rangs Bronze → Légende)', money: true, noGlobal: true } };
+// Crypto Tycoon : saisons hebdomadaires (même calendrier que le jeu) → seul l'onglet de la saison en cours est affiché.
+const CRYPTO_SEASON_EPOCH = Date.UTC(2026, 9, 4, 22, 0, 0);
+const cryptoSeason = () => Math.floor((Date.now() - CRYPTO_SEASON_EPOCH) / (7 * 86400000)) + 1;
+const isCryptoSeason = k => /^CRYPTO_S\d+$/.test(k);
+const isHiddenGame = k => HIDDEN_GAMES.has(k) || (isCryptoSeason(k) && k !== 'CRYPTO_S' + cryptoSeason());
+const inhouseMeta = k => INHOUSE_META[k] || (isCryptoSeason(k)
+    ? { what: `Fortune de la saison ${k.slice(8)} (tout le monde repart à 10 € chaque lundi)`, money: true, noGlobal: true } : null);
 const fmtEuro = v => { const a = Math.abs(v); return a >= 1e9 ? (v / 1e9).toFixed(2) + ' Md€' : a >= 1e6 ? (v / 1e6).toFixed(2) + ' M€' : a >= 1e4 ? (v / 1e3).toFixed(1) + ' K€' : Math.round(v).toLocaleString('fr-FR') + ' €'; };
 // Jeux tiers : ce que mesure leur score (envoyé par window.joxiaScore de tracker.js).
 // asc = le plus petit gagne ; ms = temps en millisecondes ; time = classé au temps de jeu (ranktime).
@@ -121,7 +128,7 @@ const lbContent = el('leaderboardContent');
 let lbData = null;
 let lbActive = '__global__';
 
-const gameLabel = key => GAME_LABELS[key] || (CATALOG[key] && CATALOG[key].name) || key;
+const gameLabel = key => GAME_LABELS[key] || (isCryptoSeason(key) ? `Crypto · Saison ${key.slice(8)}` : null) || (CATALOG[key] && CATALOG[key].name) || key;
 
 async function loadLeaderboard() {
     lbContent.innerHTML = '<p class="empty">Chargement des scores…</p>';
@@ -140,7 +147,7 @@ async function loadLeaderboard() {
         const perGame = {};
         const gameOrder = [];
         for (const gameKey in games) {
-            if (HIDDEN_GAMES.has(gameKey)) continue;
+            if (isHiddenGame(gameKey)) continue;
             const scores = (games[gameKey] && games[gameKey].scores) || {};
             const best = {};
             for (const k in scores) {
@@ -170,7 +177,7 @@ async function loadLeaderboard() {
         //    les jeux tiers ont des échelles trop différentes : temps, population…)
         const globalMap = {};
         for (const g of gameOrder) {
-            if (SCORE_META[g] || (INHOUSE_META[g] && INHOUSE_META[g].noGlobal)) continue;
+            if (SCORE_META[g] || (inhouseMeta(g) && inhouseMeta(g).noGlobal)) continue;
             for (const id in perGame[g]) {
                 if (!globalMap[id]) globalMap[id] = { identity: id, total: 0 };
                 globalMap[id].total += perGame[g][id];
@@ -266,7 +273,7 @@ function lbRow(item, i, scoreKey) {
         <span class="lb-rank">${medal(i)}</span>
         ${avatar}
         <span class="lb-name">${escapeHtml(item.name)} ${you}</span>
-        <span class="lb-score">${scoreKey === 'seconds' ? fmtPlayed(item.seconds) : scoreKey === 'score' && SCORE_META[lbActive] ? fmtScore(lbActive, item.score) : scoreKey === 'score' && INHOUSE_META[lbActive] && INHOUSE_META[lbActive].money ? fmtEuro(item.score) : item[scoreKey]}</span>
+        <span class="lb-score">${scoreKey === 'seconds' ? fmtPlayed(item.seconds) : scoreKey === 'score' && SCORE_META[lbActive] ? fmtScore(lbActive, item.score) : scoreKey === 'score' && inhouseMeta(lbActive) && inhouseMeta(lbActive).money ? fmtEuro(item.score) : item[scoreKey]}</span>
     </div>`;
 }
 
@@ -291,7 +298,7 @@ function renderLeaderboard() {
     const hint = lbActive === '__global__'
         ? '<p class="lb-hint">Somme des meilleurs scores des mini-jeux Joxia</p>'
         : meta ? `<p class="lb-hint">${escapeHtml(meta.what)}</p>`
-        : INHOUSE_META[lbActive] ? `<p class="lb-hint">${escapeHtml(INHOUSE_META[lbActive].what)}</p>` : '';
+        : inhouseMeta(lbActive) ? `<p class="lb-hint">${escapeHtml(inhouseMeta(lbActive).what)}</p>` : '';
     lbContent.innerHTML = hint + (list.length
         ? list.join('')
         : '<p class="empty">Aucun score pour l\'instant. Joue (connecté) pour apparaître ici !</p>');
