@@ -180,7 +180,8 @@ function attach() {
     watch('admins', 'admins');
     watch('games', 'games');
     watch('playing', 'playing');
-    watch('playtime', 'playtime');
+    unsubs.push(onValue(ref(db, 'playtime'), s => { state.playtime = s.val() || {}; renderAll(); syncRankTimeAll(); },
+        () => toast('Lecture refusée : playtime', true)));
     unsubs.push(onValue(ref(db, 'usernames'), s => { state.usernames = s.val() || {}; renderAll(); },
         () => { state.usernames = null; toast('Lecture refusée : usernames (détection des fiches orphelines désactivée)', true); }));
     unsubs.push(onValue(query(ref(db, 'globalChat/messages'), limitToLast(CHAT_LIMIT)), s => {
@@ -189,6 +190,30 @@ function attach() {
         state.messages = arr;
         renderAll();
     }, () => toast('Lecture du salon refusée', true)));
+}
+
+// Classement public « Temps de jeu » (ranktime) : recopie le temps cumulé de TOUS les joueurs
+// (playtime, lisible par les admins), une fois par session admin. Sans ça, un joueur n'apparaît
+// qu'après être repassé lui-même par le hub ou par un jeu depuis l'ouverture du classement.
+let rankSyncDone = false;
+async function syncRankTimeAll() {
+    if (rankSyncDone || !Object.keys(state.playtime).length) return;
+    rankSyncDone = true;
+    let rt;
+    try { rt = (await get(ref(db, 'ranktime'))).val() || {}; }
+    catch (e) { return toast('Classement « Temps de jeu » inactif : bloc ranktime absent des règles Firebase (docs/firebase-regles-tendances.json)', true); }
+    let ok = 0, ko = 0;
+    for (const uid in state.playtime) {
+        const games = (state.playtime[uid] && state.playtime[uid].games) || {};
+        for (const g in games) {
+            const sec = Math.floor(Number(games[g] && games[g].seconds) || 0);
+            if (sec < 1 || !/^[A-Z0-9_]{1,32}$/.test(g)) continue;
+            if ((Number(rt[g] && rt[g][uid]) || 0) >= sec) continue;
+            try { await set(ref(db, `ranktime/${g}/${uid}`), sec); ok++; } catch (e) { ko++; }
+        }
+    }
+    if (ok) toast(`Classement « Temps de jeu » : ${ok} temps de jeu rattrapé(s)`);
+    if (ko) toast(`${ko} rattrapage(s) refusé(s) : vérifie le bloc ranktime des règles (écriture admin)`, true);
 }
 
 let raf = 0;
