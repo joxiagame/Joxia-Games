@@ -7,6 +7,9 @@
 
    Options (attributs data-* de la balise script) :
      data-quit      position du bouton « Quitter » : tl | tr | bl | br | tc | bc (défaut tl ; tc/bc = centré)
+     data-quit-el   sélecteur du bouton Quitter déjà présent dans le jeu (défaut : #joxia-quit, #joxia-back, #back-btn) :
+                    touch.js n'en crée pas d'autre et y accole le bouton plein écran
+     data-fs        « none » = pas de bouton plein écran
      data-pad       croix directionnelle : dpad (8 directions) | dpad4 (4 directions) | none (défaut)
      data-buttons   boutons d'action « Code:Libellé » séparés par des virgules (ex. KeyZ:A,Space:Saut) ;
                     « Code:Libellé:toggle » = bouton bascule (touche maintenue jusqu'au prochain appui, ex. Ctrl)
@@ -19,7 +22,8 @@
 
    Les touches virtuelles envoient de vrais KeyboardEvent (key, code, keyCode, which)
    au document : les moteurs anciens (Phaser 2, Crafty, jQuery…) les reçoivent comme le clavier.
-   La manette n'apparaît que sur les écrans tactiles ; le bouton Quitter partout.
+   La manette n'apparaît que sur les écrans tactiles ; les boutons Quitter et Plein écran partout
+   (Plein écran masqué si le navigateur ne le permet pas, ex. Safari sur iPhone).
    ============================================================ */
 (function () {
     'use strict';
@@ -30,6 +34,7 @@
     };
     var HUB = 'https://joxiagame.github.io/Joxia-Games/';
     var isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+    var QUIT_SEL = opt('quit-el', '#joxia-quit,#joxia-back,#back-btn');
 
     /* ---------- viewport (avant le rendu) ---------- */
     var vp = opt('viewport', null), fitSel = opt('fit', null);
@@ -88,6 +93,13 @@
         '#joxia-quit.br{bottom:calc(8px + env(safe-area-inset-bottom));right:calc(8px + env(safe-area-inset-right))}' +
         '#joxia-quit.tc{top:calc(8px + env(safe-area-inset-top));left:50%;transform:translateX(-50%)}' +
         '#joxia-quit.bc{bottom:calc(8px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%)}' +
+        '#joxia-fs{z-index:2147483647;display:flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:34px;min-height:30px;' +
+        'padding:0 8px;margin:0;background:rgba(20,22,30,.86);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:10px;cursor:pointer;' +
+        'box-shadow:0 3px 12px rgba(0,0,0,.45);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);' +
+        '-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;touch-action:manipulation}' +
+        '#joxia-fs.float{position:fixed}#joxia-fs.inline{align-self:center;flex:0 0 auto}' +
+        '#joxia-fs:hover{background:rgba(255,138,61,.85)}#joxia-fs svg{width:16px;height:16px;display:block;pointer-events:none}' +
+        '#joxia-fs[hidden]{display:none!important}' +
         '.joxia-pad{position:fixed;z-index:2147483646;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;' +
         '-webkit-tap-highlight-color:transparent}' +
         '#joxia-dpad{left:calc(18px + env(safe-area-inset-left));bottom:calc(18px + env(safe-area-inset-bottom));width:132px;height:132px;' +
@@ -111,11 +123,22 @@
         '.joxia-fit{position:fixed!important;left:0!important;top:0!important;margin:0!important;transform-origin:0 0}' +
         (fitSel ? 'html,body{overflow:hidden!important;overscroll-behavior:none}' : '');
 
+    /* éléments Joxia posés dans <body> : certains jeux réécrivent tout le body (Shapez : document.body.innerHTML = …
+       à chaque écran) → on les remet en place, avec leurs écouteurs, dès qu'ils disparaissent */
+    var owned = [];
+    function own(el) {
+        owned.push(el);
+        if (owned.length > 1) return;
+        new MutationObserver(function () {
+            for (var i = 0; i < owned.length; i++) if (!owned[i].isConnected && document.body) document.body.appendChild(owned[i]);
+        }).observe(document.body, { childList: true });
+    }
+
     function build() {
         var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
         /* bouton Quitter (toutes plateformes) */
-        if (!document.getElementById('joxia-quit')) {
+        if (!document.querySelector(QUIT_SEL)) {
             var q = document.createElement('a');
             q.id = 'joxia-quit'; q.className = opt('quit', 'tl'); q.href = HUB; q.target = '_top';
             // emoji échappé : affichage correct quel que soit l'encodage de la page du jeu
@@ -126,6 +149,9 @@
             });
             document.body.appendChild(q);
         }
+        var quitEl = document.querySelector(QUIT_SEL);
+        if (quitEl && quitEl.parentNode === document.body) own(quitEl);
+        if (opt('fs', '') !== 'none') fullscreenButton();
         if (!isTouch) return;
 
         /* croix directionnelle : on suit le pouce, 8 ou 4 directions */
@@ -163,7 +189,7 @@
             pad.addEventListener('pointermove', function (e) { if (pad.hasPointerCapture(e.pointerId)) { e.preventDefault(); track(e); } });
             pad.addEventListener('pointerup', end); pad.addEventListener('pointercancel', end);
             pad.addEventListener('touchstart', function (e) { e.preventDefault(); e.stopPropagation(); }, { passive: false });
-            document.body.appendChild(pad);
+            document.body.appendChild(pad); own(pad);
         }
 
         /* boutons d'action */
@@ -193,7 +219,7 @@
                 b.addEventListener('touchstart', function (e) { e.preventDefault(); e.stopPropagation(); }, { passive: false });
                 box.appendChild(b);
             });
-            document.body.appendChild(box);
+            document.body.appendChild(box); own(box);
         }
 
         /* glisser au doigt → souris relative (jeux pilotés par pointer lock) */
@@ -221,6 +247,100 @@
                 fire('mouseup', e.changedTouches[0]); last = null;
             }, { passive: true });
         }
+    }
+
+    /* ---------- bouton Plein écran, accolé au bouton Quitter ----------
+       Bouton Quitter fixe (cas des jeux tiers) → bouton flottant placé à côté par mesure (côté intérieur de l'écran) ;
+       bouton Quitter dans le flux (barre de menu d'un mini-jeu) → inséré juste après lui dans le DOM. */
+    var ICON_IN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>';
+    var ICON_OUT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></svg>';
+    function fsElement() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
+    function fsEnter() {
+        var el = document.documentElement;
+        try {
+            if (el.requestFullscreen) return el.requestFullscreen({ navigationUI: 'hide' });
+            if (el.webkitRequestFullscreen) return el.webkitRequestFullscreen();
+        } catch (e) { /* refus du navigateur : rien à faire */ }
+    }
+    function fsExit() {
+        if (document.exitFullscreen) return document.exitFullscreen();
+        if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
+    }
+    function fullscreenButton() {
+        // iPhone (Safari) et pages en iframe sans allowfullscreen : API absente → pas de bouton
+        if (!(document.fullscreenEnabled || document.webkitFullscreenEnabled)) return;
+        var b = document.createElement('button');
+        b.id = 'joxia-fs'; b.type = 'button';
+        var sync = function () {
+            var on = !!fsElement();
+            b.innerHTML = on ? ICON_OUT : ICON_IN;
+            b.title = on ? 'Quitter le plein écran' : 'Plein écran';
+            b.setAttribute('aria-label', b.title); b.setAttribute('aria-pressed', String(on));
+        };
+        sync();
+        ['mousedown', 'mouseup', 'pointerdown', 'pointerup', 'touchstart', 'touchend'].forEach(function (t) {
+            b.addEventListener(t, function (e) { e.stopPropagation(); }, true);
+        });
+        b.addEventListener('click', function (e) {
+            e.preventDefault(); e.stopPropagation();
+            var p = fsElement() ? fsExit() : fsEnter();
+            if (p && p.catch) p.catch(function () {});
+            b.blur();  // la touche Espace/Entrée doit revenir au jeu, pas re-cliquer le bouton
+        });
+        var changed = function () {
+            sync(); releaseAll(); place();
+            // certains moteurs ne recalculent leur taille que sur « resize »
+            setTimeout(function () { window.dispatchEvent(new Event('resize')); }, 120);
+        };
+        document.addEventListener('fullscreenchange', changed);
+        document.addEventListener('webkitfullscreenchange', changed);
+
+        var quit = document.querySelector(QUIT_SEL);
+        var pos = quit && getComputedStyle(quit).position;
+        if (quit && pos !== 'fixed' && pos !== 'absolute' && quit.parentNode) {
+            b.className = 'inline';
+            quit.parentNode.insertBefore(b, quit.nextSibling);
+            // même hauteur que Quitter ; écart seulement si le conteneur n'en a pas (gap)
+            var h = Math.round(quit.getBoundingClientRect().height), gap = parseFloat(getComputedStyle(quit.parentNode).columnGap) || 0;
+            if (h) { b.style.height = h + 'px'; b.style.minHeight = '0'; b.style.minWidth = h + 'px'; }
+            if (!gap) b.style.marginLeft = '6px';
+            return;
+        }
+        b.className = 'float';
+        document.body.appendChild(b); own(b);
+        var last = '';
+        function place() {
+            if (b.className !== 'float') return;
+            var q = quit && quit.isConnected ? quit : document.querySelector(QUIT_SEL);
+            quit = q;
+            var r = q && q.getBoundingClientRect(), vis = r && r.width > 0 && r.height > 0 && getComputedStyle(q).visibility !== 'hidden';
+            var key;
+            if (!q) {
+                // aucun bouton Quitter : coin haut-droit
+                key = 'corner';
+                if (key !== last) b.style.cssText = 'top:calc(8px + env(safe-area-inset-top));right:calc(8px + env(safe-area-inset-right))';
+            } else if (!vis) {
+                // Quitter masqué par le jeu (pendant la partie…) : Plein écran aussi, pour ne pas gêner l'affichage
+                key = 'hidden';
+                if (key !== last) b.style.cssText = 'display:none';
+            } else {
+                var vw = document.documentElement.clientWidth || window.innerWidth;
+                var right = r.left + r.width / 2 > vw / 2 + 1;   // Quitter à droite → Plein écran à sa gauche
+                key = [Math.round(r.top), Math.round(r.left), Math.round(r.width), Math.round(r.height), vw].join(',');
+                if (key !== last) {
+                    b.style.cssText = 'top:' + Math.round(r.top) + 'px;height:' + Math.round(r.height) + 'px;' +
+                        (right ? 'right:' + Math.round(vw - r.left + 6) + 'px' : 'left:' + Math.round(r.right + 6) + 'px');
+                }
+            }
+            last = key;
+        }
+        place();
+        window.addEventListener('resize', place);
+        window.addEventListener('orientationchange', function () { setTimeout(place, 250); });
+        window.addEventListener('scroll', place, true);
+        setInterval(place, 600);  // le Quitter peut bouger (police chargée, pseudo affiché…) : contrôle léger
     }
 
     /* ---------- mise à l'échelle d'un élément de taille fixe ---------- */
