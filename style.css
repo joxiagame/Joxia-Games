@@ -821,3 +821,17 @@ button,a,input,.avatar-opt,.color-opt{outline:none;}
     .trend-live i,.trend-stats .is-live::before{animation:none;}
     .trend-track{scroll-behavior:auto;}
 }
+
+/* Recherche : bandeau de résultats (au-dessus de « Tes jeux ») */
+.search-result{max-width:calc(1600px - 72px);width:calc(100% - 72px);margin:18px auto -4px;box-sizing:border-box;padding:10px 14px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border);color:var(--text);font-weight:600;font-size:.92rem;scroll-margin-top:84px;}
+.search-result[hidden],.section[hidden]{display:none;}
+@media (max-width:768px){.search-result{width:calc(100% - 32px);}}
+/* Mobile : la recherche passe sur sa propre ligne, pleine largeur (sinon les boutons l'écrasent à la taille d'une icône) */
+@media (max-width:600px){
+    .topbar{flex-wrap:wrap;row-gap:8px;}
+    .topbar-actions{width:100%;justify-content:flex-start;overflow-x:auto;scrollbar-width:none;}
+    .topbar-actions .pill{white-space:nowrap;flex-shrink:0;}
+    .topbar-actions .pill-fs{margin-left:auto;}
+    .topbar-actions::-webkit-scrollbar{display:none;}
+    .search{order:2;flex:1 1 100%;max-width:none;}
+}

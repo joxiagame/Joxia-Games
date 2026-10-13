@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=17">
+    <link rel="stylesheet" href="style.css?v=18">
 </head>
 <body>
 
@@ -80,7 +80,7 @@
         <header class="topbar">
             <div class="search" id="searchWrap">
                 <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-                <input type="text" id="searchInput" placeholder="Rechercher un jeu, un joueur, une catégorie..." onkeyup="searchGame()" autocomplete="off">
+                <input type="text" id="searchInput" placeholder="Rechercher un jeu ou une catégorie…" aria-label="Rechercher un jeu ou une catégorie" autocomplete="off">
             </div>
             <div class="topbar-actions">
                 <a href="https://discord.gg/BNY6xprSen" target="_blank" rel="noopener" class="pill pill-discord">
@@ -134,7 +134,7 @@
             <div class="trend-head">
                 <h2 class="trend-title" id="trendTitle">
                     <span class="trend-live" id="trendLive"><i></i> En direct</span>
-                    <span id="trendLabel">Tendances du moment</span>
+                    <span id="trendLabel">Les jeux les plus joués</span>
                 </h2>
                 <div class="trend-nav">
                     <button class="trend-arrow" id="trendPrev" type="button" aria-label="Jeu précédent">
@@ -463,6 +463,6 @@
         <button class="discord-toast__close" aria-label="Fermer">&times;</button>
     </div>
 
-    <script type="module" src="script.js?v=24"></script>
+    <script type="module" src="script.js?v=25"></script>
 </body>
 </html>

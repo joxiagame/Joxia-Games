@@ -63,19 +63,53 @@ onValue(ref(db, 'presence'), snap => {
 });
 
 /* ================= RECHERCHE ================= */
+// Cherche dans « Tes jeux » ET « Découvre aussi » (titre, description, catégories), sans accents.
+// Les sections sans résultat sont masquées et la page défile jusqu'aux résultats
+// (sinon ils restent sous le carrousel, hors de l'écran).
+const normSearch = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+let searchScrollTimer = 0;
 window.searchGame = function() {
-    const input = el('searchInput').value.trim().toLowerCase();
-    const grid = el('gamesGrid');
-    if (!grid) return;
-    grid.classList.toggle('show-all', !!input);
-    grid.querySelectorAll('.game-card').forEach(card => {
-        const h3 = card.querySelector('h3');
-        const title = h3 ? h3.innerText.toLowerCase() : '';
-        card.style.display = (!input || title.includes(input)) ? '' : 'none';
-    });
+    const raw = el('searchInput').value.trim(), q = normSearch(raw);
+    const sections = [[el('games'), el('gamesGrid')], [el('discover'), document.querySelector('.discover-grid')]];
+    let found = 0, firstSection = null;
+    for (const [section, grid] of sections) {
+        if (!section || !grid) continue;
+        let inSection = 0;
+        grid.querySelectorAll('.game-card').forEach(card => {
+            const ok = !q || normSearch(card.textContent).includes(q);
+            card.style.display = ok ? '' : 'none';
+            if (ok) inSection++;
+        });
+        if (grid.id === 'gamesGrid') grid.classList.toggle('show-all', !!q || showAll);
+        section.hidden = !!q && !inSection;
+        if (q && inSection) { found += inSection; if (!firstSection) firstSection = section; }
+    }
+    let msg = el('searchResult');
+    if (!msg) {
+        msg = document.createElement('p');
+        msg.id = 'searchResult'; msg.className = 'search-result'; msg.setAttribute('role', 'status');
+        el('games').parentNode.insertBefore(msg, el('games'));
+    }
+    msg.hidden = !q;
+    msg.textContent = !q ? '' : found ? `🔎 ${found} jeu${found > 1 ? 'x' : ''} trouvé${found > 1 ? 's' : ''} pour « ${raw} »` : `🔎 Aucun jeu trouvé pour « ${raw} » — essaie un autre mot (ex. « puzzle », « course », « crypto »).`;
     const btn = el('toggleGames');
-    if (btn) btn.textContent = input ? 'Réduire ↑' : (showAll ? 'Réduire ↑' : 'Voir tous les jeux →');
+    if (btn) btn.textContent = q ? 'Réduire ↑' : (showAll ? 'Réduire ↑' : 'Voir tous les jeux →');
+    // amène les résultats à l'écran (une fois la frappe terminée)
+    clearTimeout(searchScrollTimer);
+    if (q) searchScrollTimer = setTimeout(() => {
+        const r = msg.getBoundingClientRect();
+        if (r.top < 70 || r.top > window.innerHeight * 0.6) msg.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 450);
 };
+(() => {
+    const si = el('searchInput');
+    if (!si) return;
+    si.addEventListener('input', window.searchGame);   // aussi au collage / à l'effacement sur mobile
+    si.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); window.searchGame(); const m = el('searchResult'); if (m) m.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+        if (e.key === 'Escape') { si.value = ''; window.searchGame(); }
+    });
+})();
 
 /* ================= CLASSEMENT (global + par jeu) ================= */
 const GAME_LABELS = {
@@ -1068,7 +1102,7 @@ EXTERNAL_GAMES.forEach(g => { CATALOG[g.id] = g; });
 const TREND_DEFAULT = ['HEXGL', 'INFINITECRAFT', 'SHAPEZ', 'ADARKROOM', 'SNAKE', 'TETRIS', 'MINDUSTRY', '3DCITY'];
 const TREND_MAX = 8, TREND_DAYS = 7, TREND_AUTOPLAY = 7000;
 
-const trend = { live: null, stats: null, order: [], index: 0, timer: null, pausedUntil: 0, hadData: false, loaded: { live: false, stats: false } };
+const trend = { live: null, stats: null, rank: null, order: [], index: 0, timer: null, pausedUntil: 0, hadData: false, loaded: { live: false, stats: false, rank: false } };
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function fmtPlayed(sec) {
@@ -1085,30 +1119,37 @@ function trendScores() {
         const week = days.reduce((n, k) => n + (Number(d[k]) || 0), 0);
         const live = Object.values((trend.live && trend.live[id]) || {}).filter(t => typeof t !== 'number' || t > stale).length;
         const plays = Number(trend.stats && trend.stats[id] && trend.stats[id].plays) || 0;
-        return { id, week, live, plays, score: week + live * 1800 };
+        // temps de jeu cumulé de tous les joueurs (ranktime, public) : classement stable « les plus joués ».
+        // Les joueurs en ligne ne changent pas l'ordre (badge seulement), sinon le carrousel bouge sans arrêt.
+        const rt = (trend.rank && trend.rank[id]) || {};
+        let total = 0, players = 0;
+        for (const u in rt) { const sec = Number(rt[u]) || 0; if (sec > 0) { total += sec; players++; } }
+        return { id, week, live, plays, total, players, score: trend.rank ? total : week };
     });
 }
 function trendRanking() {
-    const scored = trendScores().filter(x => x.score > 0).sort((a, b) => b.score - a.score);
+    const scored = trendScores().filter(x => x.score > 0).sort((a, b) => b.score - a.score || b.week - a.week || b.live - a.live);
     const ranked = scored.slice(0, TREND_MAX);
     const hasData = ranked.length > 0;
     // compléter avec la sélection par défaut pour garder un carrousel bien rempli
     const target = hasData ? Math.max(5, ranked.length) : TREND_MAX;
     for (const id of TREND_DEFAULT) {
         if (ranked.length >= target) break;
-        if (!ranked.some(x => x.id === id)) ranked.push({ id, week: 0, live: 0, plays: 0, score: 0 });
+        if (!ranked.some(x => x.id === id)) ranked.push({ id, week: 0, live: 0, plays: 0, total: 0, players: 0, score: 0 });
     }
     return { list: ranked, hasData };
 }
 function slideStats(x) {
     const out = [];
-    if (!x.live && !x.week && !x.plays) {
+    if (!x.live && !x.week && !x.plays && !x.total) {
         // pas encore de chiffres pour ce jeu : infos réelles plutôt que des statistiques inventées
         const g = CATALOG[x.id] || {};
         return (g.tags || []).map(t => `<span>${escapeHtml(t)}</span>`).join('') + '<span>🎮 Gratuit · sans installation</span>';
     }
     if (x.live) out.push(`<span class="is-live">${x.live} joueur${x.live > 1 ? 's' : ''} en ce moment</span>`);
-    if (x.week) out.push(`<span>⏱ ${fmtPlayed(x.week)} jouées cette semaine</span>`);
+    if (x.total) out.push(`<span>⏱ ${fmtPlayed(x.total)} jouées au total</span>`);
+    if (x.players) out.push(`<span>👥 ${x.players} joueur${x.players > 1 ? 's' : ''}</span>`);
+    if (x.week && !x.total) out.push(`<span>⏱ ${fmtPlayed(x.week)} jouées cette semaine</span>`);
     if (x.plays) out.push(`<span>▶ ${x.plays.toLocaleString('fr-FR')} partie${x.plays > 1 ? 's' : ''}</span>`);
     return out.join('');
 }
@@ -1118,7 +1159,7 @@ function renderTrending() {
     const track = el('trendTrack'), thumbs = el('trendThumbs');
     if (!track) return;
     const { list, hasData } = trendRanking();
-    el('trendLabel').textContent = hasData ? 'Tendances du moment' : 'À la une';
+    el('trendLabel').textContent = hasData ? 'Les jeux les plus joués' : 'À la une';
     el('trendLive').hidden = !hasData;
     const ids = list.map(x => x.id);
     const sameOrder = ids.join() === trend.order.join();
@@ -1140,7 +1181,7 @@ function renderTrending() {
         return `<li class="trend-slide" role="group" aria-roledescription="diapositive" aria-label="${i + 1} sur ${n} : ${escapeHtml(g.name)}">
             <img class="trend-bg" src="${imgSrc(g)}" alt="" ${i ? 'loading="lazy"' : ''} decoding="async">
             <div class="trend-info">
-                ${hasData && x.score ? `<span class="trend-rank">🔥 N°${i + 1} des tendances</span>` : '<span class="trend-rank">⭐ À découvrir</span>'}
+                ${hasData && x.score ? `<span class="trend-rank">${i === 0 ? '🏆' : '🔥'} N°${i + 1} des plus joués</span>` : '<span class="trend-rank">⭐ À découvrir</span>'}
                 <h3>${escapeHtml(g.name)}</h3>
                 <p class="trend-desc">${escapeHtml(g.desc || '')}</p>
                 <div class="trend-stats">${slideStats(x)}</div>
@@ -1163,7 +1204,7 @@ function renderTrending() {
     // garde à l'écran le jeu qu'on regardait, même s'il change de rang ;
     // à l'arrivée des premières vraies données, on repart du N°1
     const keep = trend.hadData ? Math.max(0, ids.indexOf(currentId)) : 0;
-    trend.hadData = hasData && trend.loaded.live && trend.loaded.stats;
+    trend.hadData = hasData && trend.loaded.rank;
     trendGo(keep, true);
 }
 function playFromTrend(id) {
@@ -1226,6 +1267,8 @@ function trendPause(ms) { trend.pausedUntil = Date.now() + ms; }
         () => { trend.loaded.live = true; renderTrending(); });
     onValue(ref(db, 'stats'), snap => { trend.stats = snap.val() || {}; trend.loaded.stats = true; renderTrending(); },
         () => { trend.loaded.stats = true; renderTrending(); });
+    onValue(ref(db, 'ranktime'), snap => { trend.rank = snap.val() || {}; trend.loaded.rank = true; renderTrending(); },
+        () => { trend.loaded.rank = true; renderTrending(); });
 })();
 
 /* ================= NAVIGATION SIDEBAR + PROFIL ================= */
