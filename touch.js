@@ -98,7 +98,8 @@
         'box-shadow:0 3px 12px rgba(0,0,0,.45);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);' +
         '-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;touch-action:manipulation}' +
         '#joxia-fs.float{position:fixed}#joxia-fs.inline{align-self:center;flex:0 0 auto}' +
-        '#joxia-fs:hover{background:rgba(255,138,61,.85)}#joxia-fs svg{width:16px;height:16px;display:block;pointer-events:none}' +
+        '#joxia-fs:hover{background:rgba(255,138,61,.85)}#joxia-fs.locked{border-color:#ffb347;color:#ffb347}'+
+        '#joxia-fs svg{width:16px;height:16px;display:block;pointer-events:none}' +
         '#joxia-fs[hidden]{display:none!important}' +
         '.joxia-pad{position:fixed;z-index:2147483646;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;' +
         '-webkit-tap-highlight-color:transparent}' +
@@ -273,10 +274,26 @@
         if (!(document.fullscreenEnabled || document.webkitFullscreenEnabled)) return;
         var b = document.createElement('button');
         b.id = 'joxia-fs'; b.type = 'button';
+        /* verrou : activé par le bouton, il ne se lève qu'en recliquant dessus. Un navigateur laisse toujours sortir
+           du plein écran (Échap, glisser sur iPad) : dans ce cas on y revient au toucher/clic suivant dans le jeu.
+           Mémorisé pour tout le site (localStorage partagé par les jeux joxiagame.github.io). */
+        var LOCK_KEY = 'joxia-fs-lock', locked = false, pending = false;
+        try { locked = localStorage.getItem(LOCK_KEY) === '1'; } catch (e) {}
+        var setLock = function (v) {
+            locked = v;
+            try { if (v) localStorage.setItem(LOCK_KEY, '1'); else localStorage.removeItem(LOCK_KEY); } catch (e) {}
+        };
+        var enter = function () {
+            if (pending) return;
+            pending = true; setTimeout(function () { pending = false; }, 1000);
+            var p = fsEnter();
+            if (p && p.catch) p.catch(function () {});
+        };
         var sync = function () {
-            var on = !!fsElement();
+            var on = !!fsElement() || locked;
             b.innerHTML = on ? ICON_OUT : ICON_IN;
-            b.title = on ? 'Quitter le plein écran' : 'Plein écran';
+            b.title = locked ? 'Plein écran verrouillé : toucher pour déverrouiller' : on ? 'Quitter le plein écran' : 'Plein écran';
+            b.classList.toggle('locked', locked);
             b.setAttribute('aria-label', b.title); b.setAttribute('aria-pressed', String(on));
         };
         sync();
@@ -285,12 +302,29 @@
         });
         b.addEventListener('click', function (e) {
             e.preventDefault(); e.stopPropagation();
-            var p = fsElement() ? fsExit() : fsEnter();
-            if (p && p.catch) p.catch(function () {});
+            if (locked || fsElement()) {
+                setLock(false);
+                if (fsElement()) { var p = fsExit(); if (p && p.catch) p.catch(function () {}); }
+            } else {
+                setLock(true); enter();
+            }
+            sync();
             b.blur();  // la touche Espace/Entrée doit revenir au jeu, pas re-cliquer le bouton
         });
+        // retour automatique en plein écran au prochain geste (le navigateur exige un geste de l'utilisateur)
+        var resume = function (e) {
+            if (!locked || fsElement() || document.hidden) return;
+            if (e.type === 'keydown' && e.key === 'Escape') return;
+            if (e.target && e.target.closest && e.target.closest('#joxia-fs,#joxia-quit,#joxia-back,#back-btn')) return;
+            enter();
+        };
+        ['pointerup', 'touchend', 'click', 'keydown'].forEach(function (t) { document.addEventListener(t, resume, true); });
+        // sur ordinateur (Chrome, Edge) : Échap doit être maintenu pour sortir au lieu d'un simple appui
+        var keyLock = function () {
+            try { if (locked && fsElement() && navigator.keyboard && navigator.keyboard.lock) navigator.keyboard.lock(['Escape']).catch(function () {}); } catch (e) {}
+        };
         var changed = function () {
-            sync(); releaseAll(); place();
+            pending = false; sync(); keyLock(); releaseAll(); place();
             // certains moteurs ne recalculent leur taille que sur « resize »
             setTimeout(function () { window.dispatchEvent(new Event('resize')); }, 120);
         };
@@ -300,7 +334,7 @@
         var quit = document.querySelector(QUIT_SEL);
         var pos = quit && getComputedStyle(quit).position;
         if (quit && pos !== 'fixed' && pos !== 'absolute' && quit.parentNode) {
-            b.className = 'inline';
+            b.classList.add('inline');
             quit.parentNode.insertBefore(b, quit.nextSibling);
             // même hauteur que Quitter ; écart seulement si le conteneur n'en a pas (gap)
             var h = Math.round(quit.getBoundingClientRect().height), gap = parseFloat(getComputedStyle(quit.parentNode).columnGap) || 0;
@@ -308,11 +342,11 @@
             if (!gap) b.style.marginLeft = '6px';
             return;
         }
-        b.className = 'float';
+        b.classList.add('float');
         document.body.appendChild(b); own(b);
         var last = '';
         function place() {
-            if (b.className !== 'float') return;
+            if (!b.classList.contains('float')) return;
             var q = quit && quit.isConnected ? quit : document.querySelector(QUIT_SEL);
             quit = q;
             var r = q && q.getBoundingClientRect(), vis = r && r.width > 0 && r.height > 0 && getComputedStyle(q).visibility !== 'hidden';
